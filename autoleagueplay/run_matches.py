@@ -43,8 +43,8 @@ def make_match_config(working_dir: WorkingDir, blue: BotConfigBundle, orange: Bo
 def make_bot_config(config_bundle: BotConfigBundle, team: Team) -> PlayerConfig:
     # Our main concern here is Psyonix bots
     player_config = PlayerConfig.bot_config(Path(config_bundle.config_path), team)
-    player_config.rlbot_controlled = player_config.name not in psyonix_bots.keys()
-    player_config.bot_skill = psyonix_bots.get(player_config.name, 1.0)
+    player_config.rlbot_controlled = player_config.name.lower() not in psyonix_bots.keys()
+    player_config.bot_skill = psyonix_bots.get(player_config.name.lower(), 1.0)
     return player_config
 
 

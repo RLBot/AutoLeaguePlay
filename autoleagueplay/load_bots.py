@@ -21,9 +21,9 @@ def load_all_bots(working_dir: WorkingDir) -> Mapping[str, BotConfigBundle]:
     bots[psyonix_rookie.name.lower()] = psyonix_rookie
     # Skill values for later. This way the user can rename the Psyonix bots by changing the config files, but we still
     # have their correct skill
-    psyonix_bots[psyonix_allstar.name] = 1.0
-    psyonix_bots[psyonix_pro.name] = 0.5
-    psyonix_bots[psyonix_rookie.name] = 0.0
+    psyonix_bots[psyonix_allstar.name.lower()] = 1.0
+    psyonix_bots[psyonix_pro.name.lower()] = 0.5
+    psyonix_bots[psyonix_rookie.name.lower()] = 0.0
 
     return bots
 
