@@ -16,9 +16,9 @@ def load_all_bots(working_dir: WorkingDir) -> Mapping[str, BotConfigBundle]:
     psyonix_allstar = get_bot_config_bundle(PackageFiles.psyonix_allstar)
     psyonix_pro = get_bot_config_bundle(PackageFiles.psyonix_pro)
     psyonix_rookie = get_bot_config_bundle(PackageFiles.psyonix_rookie)
-    bots[psyonix_allstar.name] = psyonix_allstar
-    bots[psyonix_pro.name] = psyonix_pro
-    bots[psyonix_rookie.name] = psyonix_rookie
+    bots[psyonix_allstar.name.lower()] = psyonix_allstar
+    bots[psyonix_pro.name.lower()] = psyonix_pro
+    bots[psyonix_rookie.name.lower()] = psyonix_rookie
     # Skill values for later. This way the user can rename the Psyonix bots by changing the config files, but we still
     # have their correct skill
     psyonix_bots[psyonix_allstar.name] = 1.0
