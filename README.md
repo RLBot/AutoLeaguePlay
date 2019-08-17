@@ -16,6 +16,8 @@ autoleagueplay setup <working_dir>                       | Setup a league direct
 autoleagueplay (odd | even) [--list | --results --test]  | Plays (or lists) an odd or even week from the given ladder.
 autoleagueplay fetch <week_num>                          | Fetches the given ladder from the Google Sheets.
 autoleagueplay test                                      | Checks if all bots are present in the bot folder.
+autoleagueplay leaderboard (odd | even)                  | Generate a leaderboard image.
+autoleagueplay leaderboard (clip | symbols | legend)     | Generate a clip or legend for the leaderboard, or update symbols. 
 autoleagueplay (-h | --help)                             | Show commands and options.
 autoleagueplay --version                                 | Show version.
 ```

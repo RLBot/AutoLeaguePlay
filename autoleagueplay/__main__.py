@@ -5,6 +5,8 @@ Usage:
     autoleagueplay (odd | even) [--replays=R|--list|--results|--test]
     autoleagueplay test
     autoleagueplay fetch <week_num>
+    autoleagueplay leaderboard (odd | even)
+    autoleagueplay leaderboard (clip | symbols | legend)
     autoleagueplay (-h | --help)
     autoleagueplay --version
 
@@ -22,6 +24,8 @@ from pathlib import Path
 
 from docopt import docopt
 
+from autoleagueplay.leaderboard.leaderboard import generate_leaderboard, generate_leaderboard_clip
+from autoleagueplay.leaderboard.symbols import generate_symbols, generate_legend
 from autoleagueplay.list_matches import list_matches
 from autoleagueplay.load_bots import check_bot_folder
 from autoleagueplay.paths import WorkingDir
@@ -40,7 +44,7 @@ def main():
         working_dir = Path(arguments['<working_dir>'])
         working_dir.mkdir(exist_ok=True, parents=True)
         WorkingDir(working_dir)   # Creates relevant directories and files
-        settings.working_dir_raw = str(working_dir)
+        settings.working_dir_raw = f'{working_dir}'
         settings.save()
         print(f'Working directory successfully set to \'{working_dir}\'')
 
@@ -52,7 +56,19 @@ def main():
 
         working_dir = WorkingDir(Path(settings.working_dir_raw))
 
-        if arguments['odd'] or arguments['even']:
+        if arguments['leaderboard']:
+            if arguments['odd'] or arguments['even']:
+                generate_leaderboard(working_dir, arguments['odd'])
+            elif arguments['clip']:
+                generate_leaderboard_clip(working_dir)
+            elif arguments['symbols']:
+                generate_symbols()
+            elif arguments['legend']:
+                generate_legend(working_dir)
+            else:
+                raise NotImplementedError()
+
+        elif arguments['odd'] or arguments['even']:
 
             replay_preference = ReplayPreference(arguments['--replays'])
 
