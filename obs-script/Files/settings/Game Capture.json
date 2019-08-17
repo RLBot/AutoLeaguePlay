@@ -1,0 +1,7 @@
+{
+    "allow_transparency": false,
+    "capture_cursor": false,
+    "capture_mode": "window",
+    "limit_framerate": true,
+    "window": "Rocket League (32-bit, DX9, Cooked):LaunchUnrealUWindowsClient:RocketLeague.exe"
+}

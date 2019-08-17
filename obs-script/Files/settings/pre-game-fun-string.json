@@ -1,0 +1,18 @@
+{
+    "align": "center",
+    "chatlog": false,
+    "extents": true,
+    "extents_cx": 630,
+    "extents_cy": 89,
+    "extents_wrap": true,
+    "font": {
+        "face": "Arial",
+        "flags": 0,
+        "size": 40,
+        "style": "Regular"
+    },
+    "opacity": 100,
+    "outline": false,
+    "text": "This is a Long test string like the description would be, i can even fit some more stuff",
+    "valign": "center"
+}
