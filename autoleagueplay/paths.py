@@ -35,6 +35,7 @@ class WorkingDir:
         self.ladder = self._working_dir / 'ladder.txt'
         self.new_ladder = self._working_dir / 'ladder_new.txt'
         self.match_results = self._working_dir / f'results'
+        self.match_recordings = self._working_dir / 'results' / 'videos'
         self.bots = working_dir / 'bots'
         self.overlay_interface = working_dir / 'current_match.json'
         self._ensure_directory_structure()
@@ -42,6 +43,7 @@ class WorkingDir:
     def _ensure_directory_structure(self):
         self.ladder.touch(exist_ok=True)
         self.match_results.mkdir(exist_ok=True)
+        self.match_recordings.mkdir(exist_ok=True)
         self.bots.mkdir(exist_ok=True)
 
     def get_match_result(self, division_index: int, blue: str, orange: str) -> Path:
@@ -69,3 +71,5 @@ class PackageFiles:
 
     sheets_token = _package_dir / 'cred' / 'sheets-api-token.pickle'
     credentials = _package_dir / 'cred' / 'credentials.json'
+
+    ffmpeg_bin = _package_dir / 'bin' / 'ffmpeg.exe'

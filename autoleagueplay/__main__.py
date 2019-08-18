@@ -2,7 +2,7 @@
 
 Usage:
     autoleagueplay setup <working_dir>
-    autoleagueplay (odd | even) [--replays=R|--list|--results|--test]
+    autoleagueplay (odd | even) [--replays=R|--list|--results|--test|--record]
     autoleagueplay test
     autoleagueplay fetch <week_num>
     autoleagueplay leaderboard (odd | even)
@@ -15,6 +15,7 @@ Options:
     --list                       Instead of playing the matches, the list of matches is printed.
     --results                    Like --list but also shows the result of matches that has been played.
     --test                       Checks if all needed bots are in the bot folder.
+    --record                     Record matches with ffmpeg.
     -h --help                    Show this screen.
     --version                    Show version.
 """
@@ -79,7 +80,7 @@ def main():
             elif arguments['--test']:
                 check_bot_folder(working_dir, arguments['odd'])
             else:
-                run_league_play(working_dir, arguments['odd'], replay_preference)
+                run_league_play(working_dir, arguments['odd'], replay_preference, arguments['--record'])
 
         elif arguments['test']:
             check_bot_folder(working_dir)

@@ -20,6 +20,7 @@ from autoleagueplay.match_result import CombinedScore, MatchResult
 from autoleagueplay.overlay import OverlayData
 from autoleagueplay.paths import WorkingDir, PackageFiles
 from autoleagueplay.replays import ReplayPreference, ReplayMonitor
+from autoleagueplay.match_recorder import Recorder
 
 logger = get_logger('autoleagueplay')
 
@@ -48,7 +49,7 @@ def make_bot_config(config_bundle: BotConfigBundle, team: Team) -> PlayerConfig:
     return player_config
 
 
-def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: ReplayPreference):
+def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: ReplayPreference, ffmpeg_record: bool):
     """
     Run a league play event by running round robins for half the divisions. When done, a new ladder file is created.
     """
@@ -94,6 +95,10 @@ def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: 
                 assert match_participants[0] in bots, f'{match_participants[0]} was not found in \'{working_dir.bots}\''
                 assert match_participants[1] in bots, f'{match_participants[1]} was not found in \'{working_dir.bots}\''
 
+                if ffmpeg_record:
+                    ffmpeg_recorder = Recorder(Ladder.DIVISION_NAMES[div_index], match_participants, working_dir)
+                    ffmpeg_recorder.start()
+
                 # Play the match
                 print(f'Starting match: {match_participants[0]} vs {match_participants[1]}. Waiting for match to finish...')
                 match_config = make_match_config(working_dir, bots[match_participants[0]], bots[match_participants[1]])
@@ -130,6 +135,8 @@ def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: 
                         # Let the winner celebrate and the scoreboard show for a few seconds.
                         # This sleep not required.
                         time.sleep(8)
+                        if ffmpeg_record:
+                            ffmpeg_recorder.stop()
 
         print(f'{Ladder.DIVISION_NAMES[div_index]} division done')
         event_results.append(rr_results)

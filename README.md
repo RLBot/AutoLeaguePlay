@@ -9,17 +9,18 @@ Installation:
 - To install, clone this repo and run `pip install -e .` in the directory containing `setup.py`.
 - This should give you access to the `autoleagueplay` command line tool. Try `autoleagueplay --help`.
 - Run the `autoleagueplay setup <league_dir>` command to set the directory where you want your league to be stored.
+- To use ffmpeg recoding you need to also install [virtual-audio-grabber](https://github.com/rdp/screen-capture-recorder-to-video-windows-free/releases).
 
 Usage:
 ```
-autoleagueplay setup <working_dir>                       | Setup a league directory. Required for some other commands.
-autoleagueplay (odd | even) [--list | --results --test]  | Plays (or lists) an odd or even week from the given ladder.
-autoleagueplay fetch <week_num>                          | Fetches the given ladder from the Google Sheets.
-autoleagueplay test                                      | Checks if all bots are present in the bot folder.
-autoleagueplay leaderboard (odd | even)                  | Generate a leaderboard image.
-autoleagueplay leaderboard (clip | symbols | legend)     | Generate a clip or legend for the leaderboard, or update symbols. 
-autoleagueplay (-h | --help)                             | Show commands and options.
-autoleagueplay --version                                 | Show version.
+autoleagueplay setup <working_dir>                                  | Setup a league directory. Required for some other commands.
+autoleagueplay (odd | even) [--list | --results --test | --record]  | Plays (or lists) an odd or even week from the given ladder.
+autoleagueplay fetch <week_num>                                     | Fetches the given ladder from the Google Sheets.
+autoleagueplay test                                                 | Checks if all bots are present in the bot folder.
+autoleagueplay leaderboard (odd | even)                             | Generate a leaderboard image.
+autoleagueplay leaderboard (clip | symbols | legend)                | Generate a clip or legend for the leaderboard, or update symbols. 
+autoleagueplay (-h | --help)                                        | Show commands and options.
+autoleagueplay --version                                            | Show version.
 ```
 
 Options:
@@ -28,6 +29,7 @@ Options:
 --list               Instead of playing the matches, the list of matches is printed.
 --results            Like --list but also shows the result of matches that has been played.
 --test               Checks if all needed bots are present in the bot folder.
+--record             Record matches with ffmpeg.
 -h --help            Show this screen.
 --version            Show version.
 ```
@@ -36,6 +38,7 @@ The working directory contains:
 - `ladder.txt`. This contains the bot names separated by newlines (it can be copy-pasted directly from the sheet, or fetched with the fetch command).
 - `bots/`. Directory containing the bots and their files.
 - `results/`. Directory containing results. Each match will get a json file with all the relevant data, and they are named something like `quantum_reliefbot_vs_atlas_result.json`.
+- `results/videos/`. Directory containing video recordings from ffmpeg.
 
 When running the script use either `odd` or `even` as argument to set what type of week it should play:
 - Odd: Overclocked, Circuit, Transitor, ect plays.
