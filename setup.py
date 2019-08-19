@@ -28,6 +28,7 @@ setuptools.setup(
         'google-api-python-client',
         'google-auth-httplib2',
         'google-auth-oauthlib',
+        'pywinauto',
     ],
     python_requires='>=3.7.0',
     version=version.__version__,
