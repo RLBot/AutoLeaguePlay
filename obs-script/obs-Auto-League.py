@@ -24,12 +24,12 @@ class GameTickReader:
         self.game_interface.load_interface()
         self.game_tick_packet = game_data_struct.GameTickPacket()
 
-        self.rate_limit = rate_limiter.RateLimiter(GAME_TICK_PACKET_REFRESHES_PER_SECOND)
+        #self.rate_limit = rate_limiter.RateLimiter(GAME_TICK_PACKET_REFRESHES_PER_SECOND)
         self.last_call_real_time = datetime.now()  # When we last called the Agent
 
     def get_packet(self):
         now = datetime.now()
-        self.rate_limit.acquire()
+        #self.rate_limit.acquire()
         self.last_call_real_time = now
 
         self.pull_data_from_game()
@@ -547,6 +547,7 @@ def script_properties():
                                     obs.OBS_COMBO_FORMAT_STRING)
 
     obs.obs_properties_add_button(props, "start_button", "Start Script", start_script)
+    obs.obs_properties_add_button(props, "stop_button", "Stop Script", stop_script)
 
     obs.obs_properties_add_float_slider(props, 'delay', 'Goal delay', 0, 5, 0.05)
     obs.obs_properties_add_float_slider(props, 'end_delay', 'End delay', 0, 20, 0.5)
@@ -607,19 +608,6 @@ def check_for_scene(name):
     obs.source_list_release(scenes)
     return check
 
-def script_load(settings):
-    obs.timer_add(wait_for_game, 500)
-
-def wait_for_game():
-    if CheckRunning('RocketLeague.exe'):
-        obs.timer_remove(wait_for_game)
-        start()
-    else:
-        return
-
-def start_script(props, prop):
-    start()
-
 def start():
     global packet_reader
     global bot_num
@@ -666,5 +654,20 @@ def start():
     else:
         print('Rocket League not running, Aborting!!!')
 
+def start_script(props, prop):
+    obs.timer_add(wait_for_game, 500)
 
+def stop_script(props, prop):
+    obs.timer_remove(wait_for_game)
+    obs.timer_remove(frame_tick)
+
+def wait_for_game():
+    if CheckRunning('RocketLeague.exe'):
+        obs.timer_remove(wait_for_game)
+        start()
+    else:
+        return
+
+def script_load(settings):
+    obs.timer_add(wait_for_game, 500)
 
