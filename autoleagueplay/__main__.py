@@ -15,7 +15,6 @@ Options:
     --replays=R                  What to do with the replays of the match. Valid values are 'save', and 'calculated_gg'. [default: calculated_gg]
     --list                       Instead of playing the matches, the list of matches is printed.
     --results                    Like --list but also shows the result of matches that has been played.
-    --check                      Checks if all needed bots are in the bot directory.
     --ignore-missing             Allow the script to run even though not all bots are in the bot directory.
     -h --help                    Show this screen.
     --version                    Show version.
@@ -79,8 +78,6 @@ def main():
                 list_matches(working_dir, arguments['odd'], True)
             elif arguments['--list']:
                 list_matches(working_dir, arguments['odd'], False)
-            elif arguments['--check']:
-                check_bot_folder(working_dir, arguments['odd'])
             else:
                 if not arguments['--ignore-missing']:
                     all_present = check_bot_folder(working_dir, arguments['odd'])
