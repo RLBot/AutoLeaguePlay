@@ -37,6 +37,8 @@ class WorkingDir:
         self.match_results = self._working_dir / f'results'
         self.bots = working_dir / 'bots'
         self.overlay_interface = working_dir / 'current_match.json'
+        self.leaderboard = working_dir / 'leaderboard.png'
+        self.leaderboard_clip = working_dir / 'leaderboard.mp4'
         self._ensure_directory_structure()
 
     def _ensure_directory_structure(self):
