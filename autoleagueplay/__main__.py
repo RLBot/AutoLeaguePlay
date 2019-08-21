@@ -2,7 +2,7 @@
 
 Usage:
     autoleagueplay setup <working_dir>
-    autoleagueplay (odd | even) [--replays=R|--list|--results|--test]
+    autoleagueplay (odd | even) [--replays=R|--list|--results|--test] [--ignore-missing]
     autoleagueplay test
     autoleagueplay fetch <week_num>
     autoleagueplay leaderboard (odd | even)
@@ -14,7 +14,8 @@ Options:
     --replays=R                  What to do with the replays of the match. Valid values are 'save', and 'calculated_gg'. [default: calculated_gg]
     --list                       Instead of playing the matches, the list of matches is printed.
     --results                    Like --list but also shows the result of matches that has been played.
-    --test                       Checks if all needed bots are in the bot folder.
+    --test                       Checks if all needed bots are in the bot directory.
+    --ignore-missing             Allow the script to run even though not all bots are in the bot directory.
     -h --help                    Show this screen.
     --version                    Show version.
 """
@@ -79,7 +80,12 @@ def main():
             elif arguments['--test']:
                 check_bot_folder(working_dir, arguments['odd'])
             else:
-                run_league_play(working_dir, arguments['odd'], replay_preference)
+                if not arguments['--ignore-missing']:
+                    all_present = check_bot_folder(working_dir, arguments['odd'])
+                    if all_present:
+                        run_league_play(working_dir, arguments['odd'], replay_preference)
+                else:
+                    run_league_play(working_dir, arguments['odd'], replay_preference)
 
         elif arguments['test']:
             check_bot_folder(working_dir)
