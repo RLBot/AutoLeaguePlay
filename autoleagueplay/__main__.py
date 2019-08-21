@@ -2,7 +2,8 @@
 
 Usage:
     autoleagueplay setup <working_dir>
-    autoleagueplay (odd | even) [--replays=R|--list|--results|--test] [--ignore-missing]
+    autoleagueplay (odd | even) [--replays=R | --list | --results] [--ignore-missing]
+    autoleagueplay check
     autoleagueplay test
     autoleagueplay fetch <week_num>
     autoleagueplay leaderboard (odd | even)
@@ -14,7 +15,7 @@ Options:
     --replays=R                  What to do with the replays of the match. Valid values are 'save', and 'calculated_gg'. [default: calculated_gg]
     --list                       Instead of playing the matches, the list of matches is printed.
     --results                    Like --list but also shows the result of matches that has been played.
-    --test                       Checks if all needed bots are in the bot directory.
+    --check                      Checks if all needed bots are in the bot directory.
     --ignore-missing             Allow the script to run even though not all bots are in the bot directory.
     -h --help                    Show this screen.
     --version                    Show version.
@@ -34,6 +35,7 @@ from autoleagueplay.replays import ReplayPreference
 from autoleagueplay.run_matches import run_league_play
 from autoleagueplay.settings import PersistentSettings
 from autoleagueplay.sheets import fetch_ladder_from_sheets
+from autoleagueplay.test_bots import test_all_bots
 from autoleagueplay.version import __version__
 
 
@@ -77,7 +79,7 @@ def main():
                 list_matches(working_dir, arguments['odd'], True)
             elif arguments['--list']:
                 list_matches(working_dir, arguments['odd'], False)
-            elif arguments['--test']:
+            elif arguments['--check']:
                 check_bot_folder(working_dir, arguments['odd'])
             else:
                 if not arguments['--ignore-missing']:
@@ -87,8 +89,11 @@ def main():
                 else:
                     run_league_play(working_dir, arguments['odd'], replay_preference)
 
-        elif arguments['test']:
+        elif arguments['check']:
             check_bot_folder(working_dir)
+
+        elif arguments['test']:
+            test_all_bots(working_dir)
 
         elif arguments['fetch']:
             week_num = int(arguments['<week_num>'])

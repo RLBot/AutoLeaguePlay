@@ -13,10 +13,11 @@ Installation:
 Usage:
 ```
 autoleagueplay setup <working_dir>                         | Setup a league directory. Required for some other commands.
-autoleagueplay (odd | even) [--list | --results | --test]
+autoleagueplay (odd | even) [--list | --results]
                             [--ignore-missing]             | Plays (or lists) an odd or even week from the given ladder.
 autoleagueplay fetch <week_num>                            | Fetches the given ladder from the Google Sheets.
-autoleagueplay test                                        | Checks if all bots are present in the bot folder.
+autoleagueplay check                                       | Checks if all bots are present in the bot folder.
+autoleagueplay test                                        | Test run all bots to see if they auto-start
 autoleagueplay leaderboard (odd | even)                    | Generate a leaderboard image.
 autoleagueplay leaderboard (clip | symbols | legend)       | Generate a clip or legend for the leaderboard, or update symbols. 
 autoleagueplay (-h | --help)                               | Show commands and options.
@@ -28,7 +29,6 @@ Options:
 --replays=R          What to do with the replays of the match. Valid values are 'save', and 'calculated_gg'. [default: calculated_gg]
 --list               Instead of playing the matches, the list of matches is printed.
 --results            Like --list but also shows the result of matches that has been played.
---test               Checks if all needed bots are present in the bot directory.
 --ignore-missing     Allow the script to run even though not all bots are in the bot directory.
 -h --help            Show this screen.
 --version            Show version.
