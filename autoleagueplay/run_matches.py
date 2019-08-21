@@ -43,8 +43,8 @@ def make_match_config(working_dir: WorkingDir, blue: BotConfigBundle, orange: Bo
 def make_bot_config(config_bundle: BotConfigBundle, team: Team) -> PlayerConfig:
     # Our main concern here is Psyonix bots
     player_config = PlayerConfig.bot_config(Path(config_bundle.config_path), team)
-    player_config.rlbot_controlled = player_config.name.lower() not in psyonix_bots.keys()
-    player_config.bot_skill = psyonix_bots.get(player_config.name.lower(), 1.0)
+    player_config.rlbot_controlled = player_config.name not in psyonix_bots.keys()
+    player_config.bot_skill = psyonix_bots.get(player_config.name, 1.0)
     return player_config
 
 
@@ -94,7 +94,7 @@ def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: 
                 assert match_participants[0] in bots, f'{match_participants[0]} was not found in \'{working_dir.bots}\''
                 assert match_participants[1] in bots, f'{match_participants[1]} was not found in \'{working_dir.bots}\''
 
-                # Play the match
+                # Prepare the match
                 print(f'Starting match: {match_participants[0]} vs {match_participants[1]}. Waiting for match to finish...')
                 match_config = make_match_config(working_dir, bots[match_participants[0]], bots[match_participants[1]])
                 match = MatchExercise(
@@ -139,7 +139,7 @@ def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: 
         sorted_overall_scores = sorted(overall_scores)[::-1]
         print(f'Bots\' overall performance in {Ladder.DIVISION_NAMES[div_index]} division:')
         for score in sorted_overall_scores:
-            print(f'> {score.bot}: goal_diff={score.goal_diff}, goals={score.goals}, shots={score.shots}, saves={score.saves}, points={score.points}')
+            print(f'> {score.bot:<32}: wins={score.wins:>2}, goal_diff={score.goal_diff:>3}, goals={score.goals:>2}, shots={score.shots:>2}, saves={score.saves:>2}, points={score.points:>2}')
 
         # Rearrange bots in division on the new ladder
         first_bot_index = new_ladder.division_size * div_index

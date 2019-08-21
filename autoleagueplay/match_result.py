@@ -49,8 +49,9 @@ class CombinedScore:
     Object used to a hold a bot's combined performance across multiple matches. CombinedPerformances can be compared.
     """
 
-    def __init__(self, bot: str, goal_diff: int, goals: int, shots: int, saves: int, points: int):
+    def __init__(self, bot: str, wins: int, goal_diff: int, goals: int, shots: int, saves: int, points: int):
         self.bot = bot
+        self.wins = wins
         self.goal_diff = goal_diff
         self.goals = goals
         self.shots = shots
@@ -59,7 +60,9 @@ class CombinedScore:
 
     def __lt__(self, other: 'CombinedScore') -> bool:
         # Defining this allows us to compare different bots' performance
-        # Sort by goal diff, then goals, then shots, then saves, then score
+        # Sort by wins, then goal diff, then goals, then shots, then saves, then score
+        if self.wins != other.wins:
+            return self.wins < other.wins
         if self.goal_diff != other.goal_diff:
             return self.goal_diff < other.goal_diff
         if self.goals != other.goals:
@@ -74,9 +77,10 @@ class CombinedScore:
 
     @staticmethod
     def calc_score(bot: str, match_results: List[MatchResult]) -> 'CombinedScore':
-        score = CombinedScore(bot, 0, 0, 0, 0, 0)
+        score = CombinedScore(bot, 0, 0, 0, 0, 0, 0)
         for result in match_results:
             if bot == result.blue:
+                score.wins += int(result.blue_goals > result.orange_goals)
                 score.goal_diff += result.blue_goals
                 score.goal_diff -= result.orange_goals
                 score.goals += result.blue_goals
@@ -84,6 +88,7 @@ class CombinedScore:
                 score.saves += result.blue_saves
                 score.points += result.blue_points
             elif bot == result.orange:
+                score.wins += int(result.orange_goals > result.blue_goals)
                 score.goal_diff += result.orange_goals
                 score.goal_diff -= result.blue_goals
                 score.goals += result.orange_goals
