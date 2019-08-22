@@ -10,7 +10,7 @@ from rlbottraining.rng import SeededRandomNumberGenerator
 from rlbottraining.training_exercise import TrainingExercise
 
 from autoleagueplay.match_result import MatchResult
-from autoleagueplay.replays import ReplayMonitor, ReplayPreference
+from autoleagueplay.replays import ReplayMonitor
 
 
 class FailDueToNoReplay(Fail):
@@ -28,7 +28,12 @@ class MatchGrader(Grader):
     match_result: Optional[MatchResult] = None
     saw_active_packets = False
 
+    has_pressed_h = False
+
     def on_tick(self, tick: TrainingTickPacket) -> Optional[Grade]:
+        if not self.has_pressed_h:
+            press_h()
+            self.has_pressed_h = True
         self.replay_monitor.ensure_monitoring()
         self.last_game_tick_packet = tick.game_tick_packet
         game_info = tick.game_tick_packet.game_info

@@ -57,7 +57,7 @@ class Ladder:
         if not path.is_file():
             raise ValueError('Provided path is not a file.')
         with open(path, 'r') as f:
-            return Ladder([line.strip().lower() for line in f])
+            return Ladder([line.strip() for line in f])
 
 
 def ladder_differences(old_ladder: Ladder, new_ladder: Ladder) -> Tuple[List[str], List[str], List[str]]:

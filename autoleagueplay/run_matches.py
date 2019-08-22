@@ -114,7 +114,7 @@ def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: 
         sorted_overall_scores = sorted(overall_scores)[::-1]
         print(f'Bots\' overall performance in {Ladder.DIVISION_NAMES[div_index]} division:')
         for score in sorted_overall_scores:
-            print(f'> {score.bot}: goal_diff={score.goal_diff}, goals={score.goals}, shots={score.shots}, saves={score.saves}, points={score.points}')
+            print(f'> {score.bot:<32}: wins={score.wins:>2}, goal_diff={score.goal_diff:>3}, goals={score.goals:>2}, shots={score.shots:>2}, saves={score.saves:>2}, points={score.points:>2}')
 
         # Rearrange bots in division on the new ladder
         first_bot_index = new_ladder.division_size * div_index

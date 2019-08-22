@@ -28,10 +28,11 @@ def load_all_bots(working_dir: WorkingDir) -> Mapping[str, BotConfigBundle]:
     return bots
 
 
-def check_bot_folder(working_dir: WorkingDir, odd_week: Optional[bool]=None):
+def check_bot_folder(working_dir: WorkingDir, odd_week: Optional[bool]=None) -> bool:
     """
     Prints all bots missing from the bot folder.
     If odd_week is not None, it will filter for bots needed for the given type of week.
+    Returns True if everything is okay and no bots are missing.
     """
     bots = load_all_bots(working_dir)
     ladder = Ladder.read(working_dir.ladder)
@@ -43,3 +44,5 @@ def check_bot_folder(working_dir: WorkingDir, odd_week: Optional[bool]=None):
             none_missing = False
     if none_missing:
         print('No needed bots are missing from the bot folder.')
+        return True
+    return False

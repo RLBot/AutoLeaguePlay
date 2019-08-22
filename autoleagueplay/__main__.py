@@ -2,9 +2,12 @@
 
 Usage:
     autoleagueplay setup <working_dir>
-    autoleagueplay (odd | even | bubble) [--teamsize=T] [--replays=R|--list|--results|--test]
+    autoleagueplay (odd | even | bubble) [--teamsize=T] [--replays=R | --list | --results] [--ignore-missing]
+    autoleagueplay check
     autoleagueplay test
     autoleagueplay fetch <week_num>
+    autoleagueplay leaderboard (odd | even)
+    autoleagueplay leaderboard (clip | symbols | legend)
     autoleagueplay (-h | --help)
     autoleagueplay --version
 
@@ -13,7 +16,7 @@ Options:
     --teamsize=T                 How many players per team. [default: 1]
     --list                       Instead of playing the matches, the list of matches is printed.
     --results                    Like --list but also shows the result of matches that has been played.
-    --test                       Checks if all needed bots are in the bot folder.
+    --ignore-missing             Allow the script to run even though not all bots are in the bot directory.
     -h --help                    Show this screen.
     --version                    Show version.
 """
@@ -23,6 +26,8 @@ from pathlib import Path
 
 from docopt import docopt
 
+from autoleagueplay.leaderboard.leaderboard import generate_leaderboard, generate_leaderboard_clip
+from autoleagueplay.leaderboard.symbols import generate_symbols, generate_legend
 from autoleagueplay.bubble_sort import run_bubble_sort
 from autoleagueplay.list_matches import list_matches
 from autoleagueplay.load_bots import check_bot_folder
@@ -31,6 +36,7 @@ from autoleagueplay.replays import ReplayPreference
 from autoleagueplay.run_matches import run_league_play
 from autoleagueplay.settings import PersistentSettings
 from autoleagueplay.sheets import fetch_ladder_from_sheets
+from autoleagueplay.test_bots import test_all_bots
 from autoleagueplay.version import __version__
 
 
@@ -42,7 +48,7 @@ def main():
         working_dir = Path(arguments['<working_dir>'])
         working_dir.mkdir(exist_ok=True, parents=True)
         WorkingDir(working_dir)   # Creates relevant directories and files
-        settings.working_dir_raw = str(working_dir)
+        settings.working_dir_raw = f'{working_dir}'
         settings.save()
         print(f'Working directory successfully set to \'{working_dir}\'')
 
@@ -54,7 +60,19 @@ def main():
 
         working_dir = WorkingDir(Path(settings.working_dir_raw))
 
-        if arguments['odd'] or arguments['even'] or arguments['bubble']:
+        if arguments['leaderboard']:
+            if arguments['odd'] or arguments['even']:
+                generate_leaderboard(working_dir, arguments['odd'])
+            elif arguments['clip']:
+                generate_leaderboard_clip(working_dir)
+            elif arguments['symbols']:
+                generate_symbols()
+            elif arguments['legend']:
+                generate_legend(working_dir)
+            else:
+                raise NotImplementedError()
+
+        elif arguments['odd'] or arguments['even'] or arguments['bubble']:
 
             replay_preference = ReplayPreference(arguments['--replays'])
             team_size = int(arguments['--teamsize'])
@@ -63,15 +81,21 @@ def main():
                 list_matches(working_dir, arguments['odd'], True)
             elif arguments['--list']:
                 list_matches(working_dir, arguments['odd'], False)
-            elif arguments['--test']:
-                check_bot_folder(working_dir, arguments['odd'])
             elif arguments['bubble']:
                 run_bubble_sort(working_dir, team_size, replay_preference)
             else:
-                run_league_play(working_dir, arguments['odd'], replay_preference, team_size)
+                if not arguments['--ignore-missing']:
+                    all_present = check_bot_folder(working_dir, arguments['odd'])
+                    if all_present:
+                        run_league_play(working_dir, arguments['odd'], replay_preference, team_size)
+                else:
+                    run_league_play(working_dir, arguments['odd'], replay_preference, team_size)
+
+        elif arguments['check']:
+            check_bot_folder(working_dir)
 
         elif arguments['test']:
-            check_bot_folder(working_dir)
+            test_all_bots(working_dir)
 
         elif arguments['fetch']:
             week_num = int(arguments['<week_num>'])
