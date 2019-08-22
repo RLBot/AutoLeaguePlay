@@ -15,4 +15,4 @@ class VersionedBot:
         return f'{self.get_unversioned_key()}-{self.updated_date.isoformat().replace(":", "-")}'
 
     def get_unversioned_key(self):
-        return self.bot_config.name.lower()
+        return self.bot_config.name

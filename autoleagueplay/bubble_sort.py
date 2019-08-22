@@ -26,9 +26,9 @@ class SortStepOutcome:
 
 class BubbleSorter:
 
-    def __init__(self, ladder: Ladder, working_dir: WorkingDir, team_size: int,
+    def __init__(self, working_dir: WorkingDir, team_size: int,
                  replay_preference: ReplayPreference):
-        self.ladder = ladder
+        self.ladder = Ladder.read(working_dir.ladder)
         self.working_dir = working_dir
         self.team_size = team_size
         self.replay_preference = replay_preference
@@ -118,8 +118,8 @@ class BubbleSorter:
 
     def _on_match_complete(self, result):
 
-        winner = result.winner.lower()
-        loser = result.loser.lower()
+        winner = result.winner
+        loser = result.loser
 
         winner_index = self.ladder.bots.index(winner)
         loser_index = self.ladder.bots.index(loser)
@@ -169,7 +169,7 @@ class BubbleSorter:
 
             match_result.write(self.get_result_path(next_below, next_above))
             overlay_data = BubbleSortOverlayData(self.ladder.bots, self.versioned_bots_by_name, upper_index, True,
-                                                 self.working_dir._working_dir, winner=match_result.winner.lower())
+                                                 self.working_dir._working_dir, winner=match_result.winner)
             overlay_data.write(self.working_dir.overlay_interface)
 
             self._on_match_complete(match_result)
@@ -179,10 +179,7 @@ class BubbleSorter:
 
 def run_bubble_sort(working_dir: WorkingDir, team_size: int, replay_preference: ReplayPreference):
 
-    # Ladder is a list of name.lower()
-    ladder = Ladder.read(working_dir.ladder)
-
-    sorter = BubbleSorter(ladder, working_dir, team_size, replay_preference)
+    sorter = BubbleSorter(working_dir, team_size, replay_preference)
     sorter.begin()
     print('Bubble sort is complete!')
     time.sleep(10)  # Leave some time to display the overlay.

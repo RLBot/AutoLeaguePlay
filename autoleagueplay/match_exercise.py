@@ -10,7 +10,8 @@ from rlbottraining.rng import SeededRandomNumberGenerator
 from rlbottraining.training_exercise import TrainingExercise
 
 from autoleagueplay.match_result import MatchResult
-from autoleagueplay.replays import ReplayMonitor
+from autoleagueplay.replays import ReplayPreference, ReplayMonitor
+from autoleagueplay.spectator_hud import press_h
 
 
 class FailDueToNoReplay(Fail):
