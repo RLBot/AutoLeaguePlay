@@ -21,6 +21,8 @@ class MatchResult:
         self.orange_saves = orange_saves
         self.blue_points = blue_points
         self.orange_points = orange_points
+        self.winner = blue if blue_goals > orange_goals else orange
+        self.loser = blue if blue_goals < orange_goals else orange
 
     def write(self, path: Path):
         with open(path, 'w') as f:

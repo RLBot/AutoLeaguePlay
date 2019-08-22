@@ -23,6 +23,7 @@ from rlbot.parsing.bot_config_bundle import BotConfigBundle
 from rlbot.parsing.directory_scanner import scan_directory_for_bot_configs
 
 from autoleagueplay.ladder import Ladder
+from autoleagueplay.versioned_bot import VersionedBot
 
 
 class WorkingDir:
@@ -46,6 +47,12 @@ class WorkingDir:
 
     def get_match_result(self, division_index: int, blue: str, orange: str) -> Path:
         match_name = f'{Ladder.DIVISION_NAMES[division_index]}_{blue}_vs_{orange}.json'
+        return self.match_results / match_name
+
+    def get_version_specific_match_result(self, bot1: VersionedBot, bot2: VersionedBot) -> Path:
+        bot_keys = [bot1.get_key(), bot2.get_key()]
+        bot_keys.sort()
+        match_name = f'{bot_keys[0]}_vs_{bot_keys[1]}.json'
         return self.match_results / match_name
 
     def get_bots(self) -> Mapping[str, BotConfigBundle]:
