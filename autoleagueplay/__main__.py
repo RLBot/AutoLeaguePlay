@@ -27,7 +27,7 @@ from docopt import docopt
 
 from autoleagueplay.leaderboard.leaderboard import generate_leaderboard, generate_leaderboard_clip
 from autoleagueplay.leaderboard.symbols import generate_symbols, generate_legend
-from autoleagueplay.list_matches import list_matches
+from autoleagueplay.list_matches import list_matches, list_results
 from autoleagueplay.load_bots import check_bot_folder
 from autoleagueplay.paths import WorkingDir
 from autoleagueplay.replays import ReplayPreference
@@ -75,9 +75,9 @@ def main():
             replay_preference = ReplayPreference(arguments['--replays'])
 
             if arguments['--results']:
-                list_matches(working_dir, arguments['odd'], True)
+                list_results(working_dir, arguments['odd'])
             elif arguments['--list']:
-                list_matches(working_dir, arguments['odd'], False)
+                list_matches(working_dir, arguments['odd'])
             else:
                 if not arguments['--ignore-missing']:
                     all_present = check_bot_folder(working_dir, arguments['odd'])
