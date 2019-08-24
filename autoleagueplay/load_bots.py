@@ -16,22 +16,23 @@ def load_all_bots(working_dir: WorkingDir) -> Mapping[str, BotConfigBundle]:
     psyonix_allstar = get_bot_config_bundle(PackageFiles.psyonix_allstar)
     psyonix_pro = get_bot_config_bundle(PackageFiles.psyonix_pro)
     psyonix_rookie = get_bot_config_bundle(PackageFiles.psyonix_rookie)
-    bots[psyonix_allstar.name.lower()] = psyonix_allstar
-    bots[psyonix_pro.name.lower()] = psyonix_pro
-    bots[psyonix_rookie.name.lower()] = psyonix_rookie
+    bots[psyonix_allstar.name] = psyonix_allstar
+    bots[psyonix_pro.name] = psyonix_pro
+    bots[psyonix_rookie.name] = psyonix_rookie
     # Skill values for later. This way the user can rename the Psyonix bots by changing the config files, but we still
     # have their correct skill
-    psyonix_bots[psyonix_allstar.name.lower()] = 1.0
-    psyonix_bots[psyonix_pro.name.lower()] = 0.5
-    psyonix_bots[psyonix_rookie.name.lower()] = 0.0
+    psyonix_bots[psyonix_allstar.name] = 1.0
+    psyonix_bots[psyonix_pro.name] = 0.5
+    psyonix_bots[psyonix_rookie.name] = 0.0
 
     return bots
 
 
-def check_bot_folder(working_dir: WorkingDir, odd_week: Optional[bool]=None):
+def check_bot_folder(working_dir: WorkingDir, odd_week: Optional[bool]=None) -> bool:
     """
     Prints all bots missing from the bot folder.
     If odd_week is not None, it will filter for bots needed for the given type of week.
+    Returns True if everything is okay and no bots are missing.
     """
     bots = load_all_bots(working_dir)
     ladder = Ladder.read(working_dir.ladder)
@@ -43,3 +44,5 @@ def check_bot_folder(working_dir: WorkingDir, odd_week: Optional[bool]=None):
             none_missing = False
     if none_missing:
         print('No needed bots are missing from the bot folder.')
+        return True
+    return False

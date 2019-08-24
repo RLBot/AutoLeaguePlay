@@ -3,9 +3,15 @@
 __version__ = '0.3.1'
 
 release_notes = {
+    '0.4.0': '''
+        - Added leaderboard command to generate leaderboard image and clip. # Calculated_Will & NicEastvillage
+        - Now requires all bots are present by default. Use --ignore-missing to start anyway. # NicEastvillage
+        - Added a test command to test run all bots. # NicEastvillage
+        - The --results option now prints a nice table as well. # NicEastvillage
+    ''',
     '0.3.1': '''
         - Working directory is now set once with a command. # NicEastvillage
-        - Added a fetch command that fetches a ladder from Google Sheets. # NicEastvillage
+        - Added a fetch command that fetches a ladder from Google Sheets. # naturevoidcode & NicEastvillage
         - Added a test command and option that checks for missing bots. # NicEastvillage
     ''',
     '0.2.1': '''

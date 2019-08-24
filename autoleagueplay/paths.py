@@ -37,6 +37,8 @@ class WorkingDir:
         self.match_results = self._working_dir / f'results'
         self.bots = working_dir / 'bots'
         self.overlay_interface = working_dir / 'current_match.json'
+        self.leaderboard = working_dir / 'leaderboard.png'
+        self.leaderboard_clip = working_dir / 'leaderboard.mp4'
         self._ensure_directory_structure()
 
     def _ensure_directory_structure(self):
@@ -50,7 +52,7 @@ class WorkingDir:
 
     def get_bots(self) -> Mapping[str, BotConfigBundle]:
         return {
-            bot_config.name.lower(): bot_config
+            bot_config.name: bot_config
             for bot_config in scan_directory_for_bot_configs(self.bots)
         }
 
@@ -62,10 +64,12 @@ class PackageFiles:
     _package_dir = Path(__file__).absolute().parent
     default_match_config = _package_dir / 'default_match_config.cfg'
 
-    psyonix_allstar = _package_dir / 'psyonix_bots' / 'psyonix_allstar.cfg'
-    psyonix_pro = _package_dir / 'psyonix_bots' / 'psyonix_pro.cfg'
-    psyonix_rookie = _package_dir / 'psyonix_bots' / 'psyonix_rookie.cfg'
-    psyonix_appearance = _package_dir / 'psyonix_bots' / 'psyonix_appearance.cfg'
+    _psyonix_bots = _package_dir / 'psyonix_bots'
+    psyonix_allstar = _psyonix_bots / 'psyonix_allstar.cfg'
+    psyonix_pro = _psyonix_bots / 'psyonix_pro.cfg'
+    psyonix_rookie = _psyonix_bots / 'psyonix_rookie.cfg'
+    psyonix_appearance = _psyonix_bots / 'psyonix_appearance.cfg'
 
-    sheets_token = _package_dir / 'cred' / 'sheets-api-token.pickle'
-    credentials = _package_dir / 'cred' / 'credentials.json'
+    _cred = _package_dir / 'cred'
+    sheets_token = _cred / 'sheets-api-token.pickle'
+    credentials = _cred / 'credentials.json'
