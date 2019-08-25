@@ -242,13 +242,14 @@ def league_data():
     division = league_data['division']
     show_division(division)
     config = [league_data['blue_config_path'], league_data['orange_config_path']]
+    set_logo(config[0], config[1])
     return config
 
 def show_division(div_num):
     # TODO: add divisions
     pass
 
-def get_logo(blue_config, orange_config): #reused for logo later
+def set_logo(blue_config, orange_config): #reused for logo later
     blue_logo = None
     orange_logo = None
     with open(blue_config) as blue_config_file:  # Use file to refer to the file object
@@ -266,8 +267,8 @@ def get_logo(blue_config, orange_config): #reused for logo later
         else:
             blue_logo = os.path.join(files_path, 'logo.png')
 
-    with open(orange_config) as orangee_config_file:  # Use file to refer to the file object
-        data = blue_config_file.read()
+    with open(orange_config) as orange_config_file:  # Use file to refer to the file object
+        data = orange_config_file.read()
         data = data.split('\n')
         for line in data:
             del_part = len('participant_config_0 = ')
@@ -281,7 +282,29 @@ def get_logo(blue_config, orange_config): #reused for logo later
                 else:
                     orange_logo = os.path.join(files_path, 'logo.png')
 
-    # Todo: use logos
+    scenes = obs.obs_frontend_get_scenes()
+    if scenes is not None:
+        for scene in scenes:
+            if obs.obs_source_get_name(scene) == 'RLBot - AutoLeague':
+                scene = obs.obs_scene_from_source(scene)
+                items = obs.obs_scene_enum_items(scene)
+                for item in items:
+                    if item is not None:
+                        source_t = obs.obs_sceneitem_get_source(item)
+                        if obs.obs_source_get_name(source_t) == "Logo-0":
+                            source = source_t
+                            settings = obs.obs_data_create()
+                            obs.obs_data_set_string(settings, "file", blue_logo)
+                            obs.obs_source_update(source, settings)
+                            obs.obs_data_release(settings)
+                        if obs.obs_source_get_name(source_t) == "Logo-1":
+                            source = source_t
+                            settings = obs.obs_data_create()
+                            obs.obs_data_set_string(settings, "file", orange_logo)
+                            obs.obs_source_update(source, settings)
+                            obs.obs_data_release(settings)
+                obs.source_list_release(scenes)
+                obs.sceneitem_list_release(items)
 
 def set_names(name, string):
     scenes = obs.obs_frontend_get_scenes()
@@ -314,32 +337,32 @@ def show(props, prop):
 
 def boost_bar(boost):
 
-    boost_bar_pos = [10, 110]
-    boost_bar_size = [20, 210]
+    boost_bar_pos = [446, 90]
+    boost_bar_size = [210, 20]
     perc_bar = boost[0]
 
     sceneItem = get_scene_item('Blue-Boost-0')
     scale2_vec = obs.vec2()
-    obs.vec2_set(scale2_vec, 1, perc_bar[0])
+    obs.vec2_set(scale2_vec, perc_bar[0], 1)
     obs.obs_sceneitem_set_scale(sceneItem, scale2_vec)
     pos_vec = obs.vec2()
-    obs.vec2_set(pos_vec, boost_bar_pos[0], boost_bar_pos[1] + boost_bar_size[1] * (1-perc_bar[0]))
+    obs.vec2_set(pos_vec, boost_bar_pos[0] + boost_bar_size[0] * (1-perc_bar[0]), boost_bar_pos[1])
     obs.obs_sceneitem_set_pos(sceneItem, pos_vec)
     # obs.obs_sceneitem_release(sceneItem)
 
     sceneItem = get_scene_item('Orange-Boost-0')
     scale2_vec = obs.vec2()
-    obs.vec2_set(scale2_vec, 1, perc_bar[1])
+    obs.vec2_set(scale2_vec, perc_bar[1], 1)
     obs.obs_sceneitem_set_scale(sceneItem, scale2_vec)
     pos_vec = obs.vec2()
-    obs.vec2_set(pos_vec, 1920 - boost_bar_size[0] - boost_bar_pos[0]-7, boost_bar_pos[1] + boost_bar_size[1] * (1 - perc_bar[1]))
+    obs.vec2_set(pos_vec, 1920 - boost_bar_size[0] - boost_bar_pos[0], boost_bar_pos[1])
     obs.obs_sceneitem_set_pos(sceneItem, pos_vec)
     # obs.obs_sceneitem_release(sceneItem)
 
 def do_reset_bar():
     global bot_num
     bot_num = 2
-    boost_bar([[0, 0],[0, 0]])
+    boost_bar([[0, 0], [0, 0]])
 
 def get_scene_item(name):
     scenes = obs.obs_frontend_get_scenes()
@@ -444,6 +467,22 @@ def auto_setup(props, prop): # Todo: add BO3 and BO5
         obs.obs_source_release(social_source)
         # obs.obs_sceneitem_release(social_item)
 
+        # Blue-Boost-0
+        temp_settings = get_settings('Blue Boost 0')
+        blue_boost_0_source = obs.obs_source_create('color_source', 'Blue-Boost-0', temp_settings, None)
+        blue_boost_0_item = obs.obs_scene_add(main_scene, blue_boost_0_source)
+        obs.obs_data_release(temp_settings)
+        obs.obs_source_release(blue_boost_0_source)
+        # obs.obs_sceneitem_release(blue_boost_item)
+
+        # Orange-Boost-0
+        temp_settings = get_settings('Orange Boost 0')
+        orange_boost_0_source = obs.obs_source_create('color_source', 'Orange-Boost-0', temp_settings, None)
+        orange_boost_0_item = obs.obs_scene_add(main_scene, orange_boost_0_source)
+        obs.obs_data_release(temp_settings)
+        obs.obs_source_release(orange_boost_0_source)
+        # obs.obs_sceneitem_release(orange_boost_item)
+
         # RLBot Overlay
         temp_settings = get_settings('RLBot Overlay')
         temp_path = os.path.join(files_path, 'overlay.png')
@@ -453,26 +492,6 @@ def auto_setup(props, prop): # Todo: add BO3 and BO5
         obs.obs_data_release(temp_settings)
         obs.obs_source_release(overlay_source)
         # obs.obs_sceneitem_release(overlay_item)
-
-        # Bar-0
-        temp_settings = get_settings('bar-0')
-        temp_path = os.path.join(files_path, 'bar-0.png')
-        obs.obs_data_set_string(temp_settings, 'file', temp_path)
-        bar_0_source = obs.obs_source_create('image_source', 'Bar-0', temp_settings, None)
-        bar_0_item = obs.obs_scene_add(main_scene, bar_0_source)
-        obs.obs_data_release(temp_settings)
-        obs.obs_source_release(bar_0_source)
-        # obs.obs_sceneitem_release(bar_0_item)
-
-        # Bar-1
-        temp_settings = get_settings('bar-1')
-        temp_path = os.path.join(files_path,'bar-1.png')
-        obs.obs_data_set_string(temp_settings, 'file', temp_path)
-        bar_1_source = obs.obs_source_create('image_source', 'Bar-1', temp_settings, None)
-        bar_1_item = obs.obs_scene_add(main_scene, bar_1_source)
-        obs.obs_data_release(temp_settings)
-        obs.obs_source_release(bar_1_source)
-        # obs.obs_sceneitem_release(bar_1_item)
 
         # Blue-Name
         temp_settings = get_settings('Blue Team Name')
@@ -490,31 +509,35 @@ def auto_setup(props, prop): # Todo: add BO3 and BO5
         obs.obs_source_release(orange_name_source)
         # obs.obs_sceneitem_release(orange_name_item)
 
-        # Blue-Boost-0
-        temp_settings = get_settings('Blue Boost 0')
-        blue_boost_0_source = obs.obs_source_create('color_source', 'Blue-Boost-0', temp_settings, None)
-        blue_boost_0_item = obs.obs_scene_add(main_scene, blue_boost_0_source)
-        obs.obs_data_release(temp_settings)
-        obs.obs_source_release(blue_boost_0_source)
-        # obs.obs_sceneitem_release(blue_boost_item)
-
-        # Orange-Boost-0
-        temp_settings = get_settings('Orange Boost 0')
-        orange_boost_0_source = obs.obs_source_create('color_source', 'Orange-Boost-0', temp_settings, None)
-        orange_boost_0_item = obs.obs_scene_add(main_scene, orange_boost_0_source)
-        obs.obs_data_release(temp_settings)
-        obs.obs_source_release(orange_boost_0_source)
-        # obs.obs_sceneitem_release(orange_boost_item)
-
-        # Boost-0
-        temp_settings = get_settings('Boost-0')
-        temp_path = os.path.join(files_path,'Boost-0.png')
+        # Logo-0
+        temp_settings = get_settings('Logo')
+        temp_path = os.path.join(files_path, 'logo.png')
         obs.obs_data_set_string(temp_settings, 'file', temp_path)
-        boost_0_source = obs.obs_source_create('image_source', 'Boost-0', temp_settings, None)
-        boost_0_item = obs.obs_scene_add(main_scene, boost_0_source)
+        logo_0_source = obs.obs_source_create('image_source', 'Logo-0', temp_settings, None)
+        logo_0_item = obs.obs_scene_add(main_scene, logo_0_source)
         obs.obs_data_release(temp_settings)
-        obs.obs_source_release(boost_0_source)
-        # obs.obs_sceneitem_release(bar_1_item)
+        obs.obs_source_release(logo_0_source)
+        vec = obs.vec2()
+        obs.vec2_set(vec, 663, 10)
+        obs.obs_sceneitem_set_pos(logo_0_item, vec)
+        obs.vec2_set(vec, 0.25, 0.25)
+        obs.obs_sceneitem_set_scale(logo_0_item, vec)
+        # obs.obs_sceneitem_release(social_item)
+
+        # Logo-1
+        temp_settings = get_settings('Logo')
+        temp_path = os.path.join(files_path, 'logo.png')
+        obs.obs_data_set_string(temp_settings, 'file', temp_path)
+        logo_0_source = obs.obs_source_create('image_source', 'Logo-1', temp_settings, None)
+        logo_0_item = obs.obs_scene_add(main_scene, logo_0_source)
+        obs.obs_data_release(temp_settings)
+        obs.obs_source_release(logo_0_source)
+        vec = obs.vec2()
+        obs.vec2_set(vec, 1920-100-663, 10)
+        obs.obs_sceneitem_set_pos(logo_0_item, vec)
+        obs.vec2_set(vec, 0.25, 0.25)
+        obs.obs_sceneitem_set_scale(logo_0_item, vec)
+        # obs.obs_sceneitem_release(social_item)
 
         # Goal
         temp_settings = get_settings('Goal')
@@ -669,5 +692,4 @@ def wait_for_game():
         return
 
 def script_load(settings):
-    obs.timer_add(wait_for_game, 500)
-
+    pass
