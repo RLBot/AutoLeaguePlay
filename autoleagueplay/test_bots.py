@@ -81,7 +81,7 @@ def test_all_bots(working_dir: WorkingDir):
     bots = load_all_bots(working_dir)
 
     # Pair each bot for a match. If there's an odd amount of bots, the last bot plays against the first bot
-    pairs = [(ladder.bots[i], ladder.bots[i + 1]) for i in range(bot_count // 2)]
+    pairs = [(2*ladder.bots[i], ladder.bots[2*i + 1]) for i in range(bot_count // 2)]
     if bot_count % 2 == 1:
         pairs.append((ladder.bots[0], ladder.bots[-1]))
 
