@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 import time
@@ -60,8 +61,13 @@ class BubbleSorter:
                 ["git", "log", "-n", "1", '--format="%ad"', "--date=iso-strict", "--", relative_path], cwd=git_root)
             iso_date = iso_date_binary.decode(sys.stdout.encoding).strip("\"\n")
 
+            if len(iso_date) > 0:
+                date = datetime.fromisoformat(iso_date)
+            else:
+                date = get_modified_date(folder)
+
             for bot_config in scan_directory_for_bot_configs(folder):
-                versioned_bot = VersionedBot(bot_config, datetime.fromisoformat(iso_date))
+                versioned_bot = VersionedBot(bot_config, date)
                 print(versioned_bot)
                 versioned_bots.add(versioned_bot)
 
@@ -177,8 +183,20 @@ class BubbleSorter:
             return SortStepOutcome(upper_index=upper_index, sort_complete=False)
 
 
-def run_bubble_sort(working_dir: WorkingDir, team_size: int, replay_preference: ReplayPreference):
+def get_modified_date(folder) -> datetime:
+    ignored_directories = ['__pycache__']
+    ignored_files = ['RLBot_Core_Interface.dll']
+    max_timestamp = 0
+    for root, dirs, files in os.walk(folder, topdown=True):
+        dirs[:] = [d for d in dirs if d not in ignored_directories]
+        timestamp = max(os.stat(os.path.join(root, f)).st_mtime for f in files if f not in ignored_files)
+        if timestamp > max_timestamp:
+            max_timestamp = timestamp
 
+    return datetime.fromtimestamp(max_timestamp)
+
+
+def run_bubble_sort(working_dir: WorkingDir, team_size: int, replay_preference: ReplayPreference):
     sorter = BubbleSorter(working_dir, team_size, replay_preference)
     sorter.begin()
     print('Bubble sort is complete!')
