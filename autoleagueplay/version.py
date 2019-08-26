@@ -3,20 +3,24 @@
 __version__ = '0.3.1'
 
 release_notes = {
+    '0.5.0': '''
+        - Added bubble sort. - tarehart
+        - Now hides spectator hud (by pressing h). - NicEastvillage
+    ''',
     '0.4.0': '''
-        - Added leaderboard command to generate leaderboard image and clip. # Calculated_Will & NicEastvillage
-        - Now requires all bots are present by default. Use --ignore-missing to start anyway. # NicEastvillage
-        - Added a test command to test run all bots. # NicEastvillage
-        - The --results option now prints a nice table as well. # NicEastvillage
+        - Added leaderboard command to generate leaderboard image and clip. - Calculated_Will & NicEastvillage
+        - Now requires all bots are present by default. Use --ignore-missing to start anyway. - NicEastvillage
+        - Added a test command to test run all bots. - NicEastvillage
+        - The --results option now prints a nice table as well. - NicEastvillage
     ''',
     '0.3.1': '''
-        - Working directory is now set once with a command. # NicEastvillage
-        - Added a fetch command that fetches a ladder from Google Sheets. # naturevoidcode & NicEastvillage
-        - Added a test command and option that checks for missing bots. # NicEastvillage
+        - Working directory is now set once with a command. - NicEastvillage
+        - Added a fetch command that fetches a ladder from Google Sheets. - naturevoidcode & NicEastvillage
+        - Added a test command and option that checks for missing bots. - NicEastvillage
     ''',
     '0.2.1': '''
-        - Added a --list and --results option to show matches that will be played and their results # NicEastvillage
-        - Now places info about current match in a `current_match.json` which can be used for overlays # NicEastvillage 
+        - Added a --list and --results option to show matches that will be played and their results - NicEastvillage
+        - Now places info about current match in a `current_match.json` which can be used for overlays - NicEastvillage 
     ''',
     '0.1.0': '''
         - Modified DomNomNom's AutoLeague script to run League Play matches # NicEastvillage
