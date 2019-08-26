@@ -12,6 +12,7 @@ from watchdog.observers import Observer
 class ReplayPreference(Enum):
     SAVE = 'save'  # save to the default replays directory
     CALCULATED_GG = 'calculated_gg'  # save locally and upload to https://calculated.gg/
+    IGNORE_REPLAY = 'ignore'
 
 
 def upload_to_calculated_gg(replay_path: Path):
@@ -40,7 +41,7 @@ class ReplayMonitor(Metric):
         }
 
     def ensure_monitoring(self):
-        if self.observer is not None:
+        if self.replay_preference == ReplayPreference.IGNORE_REPLAY or self.observer is not None:
             return
         replay_monitor = self
         class SetReplayId(LoggingEventHandler):
@@ -66,8 +67,9 @@ class ReplayMonitor(Metric):
         self.observer.start()
 
     def stop_monitoring(self):
-        self.observer.stop()
-        self.observer.join(1)
+        if self.observer is not None:
+            self.observer.stop()
+            self.observer.join(1)
 
 
 def get_replay_dir() -> Path:
