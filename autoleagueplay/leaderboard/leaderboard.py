@@ -20,7 +20,10 @@ def generate_leaderboard(working_dir: WorkingDir, odd_week: bool, extra: bool=Fa
     """
 
     assert working_dir.ladder.exists(), f'\'{working_dir.ladder}\' does not exist.'
-    assert working_dir.new_ladder.exists(), f'\'{working_dir.new_ladder}\' does not exist yet.'
+
+    if not working_dir.new_ladder.exists():
+        print(f'The new ladder has not been determined yet.')
+        return
 
     old_ladder = Ladder.read(working_dir.ladder)
     new_ladder = Ladder.read(working_dir.new_ladder)

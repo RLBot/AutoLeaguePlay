@@ -8,20 +8,23 @@ Recommended: Use [Bakkesmod](https://bakkesmod.com/) and have 'Automatically sav
 Installation:
 - To install, clone this repo and run `pip install -e .` in the directory containing `setup.py`.
 - This should give you access to the `autoleagueplay` command line tool. Try `autoleagueplay --help`.
-- Run the `autoleagueplay setup <league_dir>` command to set the directory where you want your league to be stored.
+- Run the `autoleagueplay setup <working_dir>` command to set the directory where you want your league to be stored.
 
 Usage:
 ```
-autoleagueplay setup <working_dir>                         | Setup a league directory. Required for some other commands.
-autoleagueplay (odd | even) [--list | --results]
-                            [--ignore-missing]             | Plays (or lists) an odd or even week from the given ladder.
-autoleagueplay fetch <week_num>                            | Fetches the given ladder from the Google Sheets.
-autoleagueplay check                                       | Checks if all bots are present in the bot folder.
-autoleagueplay test                                        | Test run all bots to see if they auto-start
-autoleagueplay leaderboard (odd | even)                    | Generate a leaderboard image.
-autoleagueplay leaderboard (clip | symbols | legend)       | Generate a clip or legend for the leaderboard, or update symbols. 
-autoleagueplay (-h | --help)                               | Show commands and options.
-autoleagueplay --version                                   | Show version.
+autoleagueplay setup <working_dir>                           | Setup a league directory. Required for some other commands.
+autoleagueplay run (odd | even) [--teamsize=T] [--replays=R]
+                                [--ignore-missing]           | Runs an odd or even week.
+autoleagueplay bubble [--teamsize=T] [--replays=R]           | Runs a bubble sort.
+autoleagueplay list (odd | even)                             | Lists all matches for the next odd or even week.
+autoleagueplay results (odd | even)                          | Lists the results.
+autoleagueplay fetch <week_num>                              | Fetches the given ladder from the Google Sheets.
+autoleagueplay check                                         | Checks if all bots are present in the bot folder.
+autoleagueplay test                                          | Test run all bots to see if they auto-start
+autoleagueplay leaderboard (odd | even)                      | Generate a leaderboard image.
+autoleagueplay leaderboard (clip | symbols | legend)         | Generate a clip or legend for the leaderboard, or update symbols. 
+autoleagueplay (-h | --help)                                 | Show commands and options.
+autoleagueplay --version                                     | Show version.
 ```
 
 Options:

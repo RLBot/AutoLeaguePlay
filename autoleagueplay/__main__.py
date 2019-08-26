@@ -2,7 +2,10 @@
 
 Usage:
     autoleagueplay setup <working_dir>
-    autoleagueplay (odd | even | bubble) [--teamsize=T] [--replays=R | --list | --results] [--ignore-missing]
+    autoleagueplay run (odd | even) [--teamsize=T] [--replays=R] [--ignore-missing]
+    autoleagueplay bubble [--teamsize=T] [--replays=R]
+    autoleagueplay list (odd | even)
+    autoleagueplay results (odd | even)
     autoleagueplay check
     autoleagueplay test
     autoleagueplay fetch <week_num>
@@ -12,10 +15,8 @@ Usage:
     autoleagueplay --version
 
 Options:
-    --replays=R                  What to do with the replays of the match. Valid values are 'save', and 'calculated_gg'. [default: calculated_gg]
+    --replays=R                  What to do with the replays of the match. Valid values are 'ignore', 'save', and 'calculated_gg'. [default: calculated_gg]
     --teamsize=T                 How many players per team. [default: 1]
-    --list                       Instead of playing the matches, the list of matches is printed.
-    --results                    Like --list but also shows the result of matches that has been played.
     --ignore-missing             Allow the script to run even though not all bots are in the bot directory.
     -h --help                    Show this screen.
     --version                    Show version.
@@ -72,24 +73,31 @@ def main():
             else:
                 raise NotImplementedError()
 
-        elif arguments['odd'] or arguments['even'] or arguments['bubble']:
+        elif arguments['run']:
+
+            replay_preference = ReplayPreference(arguments['--replays'])
+            team_size = int(arguments['--teamsize'])
+            odd_week = arguments['odd']
+
+            if not arguments['--ignore-missing']:
+                all_present = check_bot_folder(working_dir, odd_week)
+                if all_present:
+                    run_league_play(working_dir, odd_week, replay_preference, team_size)
+            else:
+                run_league_play(working_dir, odd_week, replay_preference, team_size)
+
+        elif arguments['bubble']:
 
             replay_preference = ReplayPreference(arguments['--replays'])
             team_size = int(arguments['--teamsize'])
 
-            if arguments['--results']:
-                list_results(working_dir, arguments['odd'])
-            elif arguments['--list']:
-                list_matches(working_dir, arguments['odd'])
-            elif arguments['bubble']:
-                run_bubble_sort(working_dir, team_size, replay_preference)
-            else:
-                if not arguments['--ignore-missing']:
-                    all_present = check_bot_folder(working_dir, arguments['odd'])
-                    if all_present:
-                        run_league_play(working_dir, arguments['odd'], replay_preference, team_size)
-                else:
-                    run_league_play(working_dir, arguments['odd'], replay_preference, team_size)
+            run_bubble_sort(working_dir, team_size, replay_preference)
+
+        elif arguments['list']:
+            list_matches(working_dir, arguments['odd'])
+
+        elif arguments['results']:
+            list_results(working_dir, arguments['odd'])
 
         elif arguments['check']:
             check_bot_folder(working_dir)
