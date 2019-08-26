@@ -112,6 +112,9 @@ def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: 
                 with setup_manager_context() as setup_manager:
                     # Disable rendering by replacing renderer with a renderer that does nothing
                     setup_manager.game_interface.renderer = FakeRenderer()
+                    # If any bots have signed up for early start, give them 10 seconds.
+                    # This is typically enough for Scratch.
+                    setup_manager.early_start_seconds = 10
 
                     # For loop, but should only run exactly once
                     for exercise_result in run_playlist([match], setup_manager=setup_manager):
