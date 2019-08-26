@@ -1,11 +1,5 @@
-import random
 import time
-from pathlib import Path
-from typing import Mapping
 
-from rlbot.matchconfig.conversions import read_match_config_from_file
-from rlbot.matchconfig.match_config import MatchConfig, PlayerConfig, Team
-from rlbot.parsing.bot_config_bundle import BotConfigBundle
 from rlbot.setup_manager import setup_manager_context
 from rlbot.training.training import Fail
 from rlbot.utils.logging_utils import get_logger
@@ -14,41 +8,45 @@ from rlbottraining.exercise_runner import run_playlist
 from autoleagueplay.fake_renderer import FakeRenderer
 from autoleagueplay.generate_matches import generate_round_robin_matches
 from autoleagueplay.ladder import Ladder
-from autoleagueplay.load_bots import load_all_bots, psyonix_bots
+from autoleagueplay.load_bots import load_all_bots
+from autoleagueplay.match_configurations import make_match_config
 from autoleagueplay.match_exercise import MatchExercise, MatchGrader
 from autoleagueplay.match_result import CombinedScore, MatchResult
 from autoleagueplay.overlay import OverlayData
-from autoleagueplay.paths import WorkingDir, PackageFiles
+from autoleagueplay.paths import WorkingDir
 from autoleagueplay.replays import ReplayPreference, ReplayMonitor
 
 logger = get_logger('autoleagueplay')
 
 
-def make_match_config(working_dir: WorkingDir, blue: BotConfigBundle, orange: BotConfigBundle) -> MatchConfig:
-    match_config = read_match_config_from_file(PackageFiles.default_match_config)
-    match_config.game_map = random.choice([
-        'ChampionsField',
-        'Farmstead',
-        'DFHStadium',
-        'Wasteland',
-        'BeckwithPark'
-    ])
-    match_config.player_configs = [
-        make_bot_config(blue, Team.BLUE),
-        make_bot_config(orange, Team.ORANGE)
-    ]
-    return match_config
+def run_match(participant_1: str, participant_2: str, match_config, replay_preference) -> MatchResult:
+
+    # Play the match
+    print(f'Starting match: {participant_1} vs {participant_2}. Waiting for match to finish...')
+    match = MatchExercise(
+        name=f'{participant_1} vs {participant_2}',
+        match_config=match_config,
+        grader=MatchGrader(
+            replay_monitor=ReplayMonitor(replay_preference=replay_preference),
+        )
+    )
+
+    with setup_manager_context() as setup_manager:
+        # Disable rendering by replacing renderer with a renderer that does nothing
+        setup_manager.game_interface.renderer = FakeRenderer()
+
+        # For loop, but should only run exactly once
+        for exercise_result in run_playlist([match], setup_manager=setup_manager):
+
+            # Warn users if no replay was found
+            if isinstance(exercise_result.grade, Fail) and exercise_result.exercise.grader.replay_monitor.replay_id == None:
+                print(f'WARNING: No replay was found for the match \'{participant_1} vs {participant_2}\'. Is Bakkesmod injected and \'Automatically save all replays\' enabled?')
+
+            # Save result in file
+            return exercise_result.exercise.grader.match_result
 
 
-def make_bot_config(config_bundle: BotConfigBundle, team: Team) -> PlayerConfig:
-    # Our main concern here is Psyonix bots
-    player_config = PlayerConfig.bot_config(Path(config_bundle.config_path), team)
-    player_config.rlbot_controlled = player_config.name not in psyonix_bots.keys()
-    player_config.bot_skill = psyonix_bots.get(player_config.name, 1.0)
-    return player_config
-
-
-def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: ReplayPreference):
+def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: ReplayPreference, team_size):
     """
     Run a league play event by running round robins for half the divisions. When done, a new ladder file is created.
     """
@@ -91,45 +89,22 @@ def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: 
                     raise e
 
             else:
-                assert match_participants[0] in bots, f'{match_participants[0]} was not found in \'{working_dir.bots}\''
-                assert match_participants[1] in bots, f'{match_participants[1]} was not found in \'{working_dir.bots}\''
-
-                # Prepare the match
-                print(f'Starting match: {match_participants[0]} vs {match_participants[1]}. Waiting for match to finish...')
-                match_config = make_match_config(working_dir, bots[match_participants[0]], bots[match_participants[1]])
-                match = MatchExercise(
-                    name=f'{match_participants[0]} vs {match_participants[1]}',
-                    match_config=match_config,
-                    grader=MatchGrader(
-                        replay_monitor=ReplayMonitor(replay_preference=replay_preference),
-                    )
-                )
-
                 # Let overlay know which match we are about to start
                 overlay_data = OverlayData(div_index, bots[match_participants[0]].config_path, bots[match_participants[1]].config_path)
                 overlay_data.write(working_dir.overlay_interface)
 
-                with setup_manager_context() as setup_manager:
-                    # Disable rendering by replacing renderer with a renderer that does nothing
-                    setup_manager.game_interface.renderer = FakeRenderer()
+                participant_1 = bots[match_participants[0]]
+                participant_2 = bots[match_participants[1]]
+                match_config = make_match_config(participant_1, participant_2, team_size)
+                result = run_match(participant_1.name, participant_2.name, match_config, replay_preference)
+                result.write(result_path)
+                print(f'Match finished {result.blue_goals}-{result.orange_goals}. Saved result as {result_path}')
 
-                    # For loop, but should only run exactly once
-                    for exercise_result in run_playlist([match], setup_manager=setup_manager):
+                rr_results.append(result)
 
-                        # Warn users if no replay was found
-                        if isinstance(exercise_result.grade, Fail) and exercise_result.exercise.grader.replay_monitor.replay_id == None:
-                            print(f'WARNING: No replay was found for the match \'{match_participants[0]} vs {match_participants[1]}\'. Is Bakkesmod injected and \'Automatically save all replays\' enabled?')
-
-                        # Save result in file
-                        result = exercise_result.exercise.grader.match_result
-                        result.write(result_path)
-                        print(f'Match finished {result.blue_goals}-{result.orange_goals}. Saved result as {result_path}')
-
-                        rr_results.append(result)
-
-                        # Let the winner celebrate and the scoreboard show for a few seconds.
-                        # This sleep not required.
-                        time.sleep(8)
+                # Let the winner celebrate and the scoreboard show for a few seconds.
+                # This sleep not required.
+                time.sleep(8)
 
         print(f'{Ladder.DIVISION_NAMES[div_index]} division done')
         event_results.append(rr_results)
