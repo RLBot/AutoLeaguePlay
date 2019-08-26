@@ -2,6 +2,8 @@ import time
 from dataclasses import dataclass
 from typing import Optional
 
+from autoleagueplay.match_result import MatchResult
+from rlbot.setup_manager import setup_manager_context
 from rlbottraining.exercise_runner import run_playlist
 
 from autoleagueplay.load_bots import load_all_bots
@@ -71,6 +73,27 @@ class AliveGrader(Grader):
         return None
 
 
+def run_test_match(participant_1: str, participant_2: str, match_config) -> Optional[Grade]:
+
+    # Play the match
+    print(f'Starting test match: {participant_1} vs {participant_2}...')
+    match = MatchExercise(
+        name=f'{participant_1} vs {participant_2}',
+        match_config=match_config,
+        grader=AliveGrader()
+    )
+
+    with setup_manager_context() as setup_manager:
+
+        # If any bots have signed up for early start, give them 10 seconds.
+        # This is typically enough for Scratch.
+        setup_manager.early_start_seconds = 10
+
+        # For loop, but should only run exactly once
+        for exercise_result in run_playlist([match], setup_manager=setup_manager):
+            return exercise_result.grade
+
+
 def test_all_bots(working_dir: WorkingDir):
     """
     Tests if all bots work by starting a series of matches and check if the bots move
@@ -81,32 +104,25 @@ def test_all_bots(working_dir: WorkingDir):
     bots = load_all_bots(working_dir)
 
     # Pair each bot for a match. If there's an odd amount of bots, the last bot plays against the first bot
-    pairs = [(2*ladder.bots[i], ladder.bots[2*i + 1]) for i in range(bot_count // 2)]
+    pairs = [(ladder.bots[2*i], ladder.bots[2*i + 1]) for i in range(bot_count // 2)]
     if bot_count % 2 == 1:
         pairs.append((ladder.bots[0], ladder.bots[-1]))
 
-    # Prepare matches
-    matches = []
-    for match_participant_pair in pairs:
-        match_config = make_match_config(working_dir, bots[match_participant_pair[0]], bots[match_participant_pair[1]])
-        match = MatchExercise(
-            name=f'{match_participant_pair[0]} vs {match_participant_pair[1]}',
-            match_config=match_config,
-            grader=AliveGrader()
-        )
-        matches.append(match)
-
+    # Run matches
     fails = []
-
-    # Play all the test matches
-    for exercise_result in run_playlist(matches):
-        if isinstance(exercise_result.grade, Fail):
-            fails.append(exercise_result.grade)
+    for match_participant_pair in pairs:
+        participant_1 = bots[match_participant_pair[0]]
+        participant_2 = bots[match_participant_pair[1]]
+        match_config = make_match_config(participant_1, participant_2)
+        grade = run_test_match(participant_1.name, participant_2.name, match_config)
+        if isinstance(grade, Fail):
+            fails.append(grade)
+        time.sleep(1)
 
     time.sleep(2)
 
     # Print summary
-    print(f'All test matches have been played ({len(matches)} in total). Summary:')
+    print(f'All test matches have been played ({len(pairs)} in total). Summary:')
     if len(fails) == 0:
         print(f'All bots seem to work!')
     else:

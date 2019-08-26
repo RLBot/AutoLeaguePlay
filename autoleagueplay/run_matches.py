@@ -19,7 +19,7 @@ from autoleagueplay.replays import ReplayPreference, ReplayMonitor
 logger = get_logger('autoleagueplay')
 
 
-def run_match(participant_1: str, participant_2: str, match_config, replay_preference) -> MatchResult:
+def run_match(participant_1: str, participant_2: str, match_config, replay_preference: ReplayPreference) -> MatchResult:
 
     # Play the match
     print(f'Starting match: {participant_1} vs {participant_2}. Waiting for match to finish...')
@@ -45,11 +45,10 @@ def run_match(participant_1: str, participant_2: str, match_config, replay_prefe
             if isinstance(exercise_result.grade, Fail) and exercise_result.exercise.grader.replay_monitor.replay_id == None:
                 print(f'WARNING: No replay was found for the match \'{participant_1} vs {participant_2}\'. Is Bakkesmod injected and \'Automatically save all replays\' enabled?')
 
-            # Save result in file
             return exercise_result.exercise.grader.match_result
 
 
-def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: ReplayPreference, team_size):
+def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: ReplayPreference, team_size: int):
     """
     Run a league play event by running round robins for half the divisions. When done, a new ladder file is created.
     """
