@@ -48,7 +48,7 @@ class WorkingDir:
         self.bots.mkdir(exist_ok=True)
 
     def get_match_result(self, division_index: int, blue: str, orange: str) -> Path:
-        match_name = f'{Ladder.DIVISION_NAMES[division_index]}_{blue}_vs_{orange}.json'
+        match_name = f'{Ladder.DIVISION_NAMES[division_index].lower()}_{blue}_vs_{orange}.json'
         return self.match_results / match_name
 
     def get_version_specific_match_result(self, bot1: VersionedBot, bot2: VersionedBot) -> Path:

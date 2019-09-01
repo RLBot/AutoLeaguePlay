@@ -36,8 +36,7 @@ def generate_leaderboard(working_dir: WorkingDir, odd_week: bool, extra: bool=Fa
     # PARAMETERS FOR DRAWING:
 
     # Divisions
-    divisions = ('Quantum', 'Overclocked', 'Processor', 'Circuit', 'Transistor', 'Abacus', 'Babbage', 'Colossus',
-                 'Dragon', 'ENIAC', 'Ferranti')
+    divisions = Ladder.DIVISION_NAMES
 
     '''
     Each division has the origin at the top left corner of their emblem.

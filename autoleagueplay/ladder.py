@@ -5,8 +5,8 @@ from typing import List, Tuple
 
 
 class Ladder:
-    DIVISION_NAMES = ['quantum', 'overclocked', 'processor', 'circuit', 'transistor', 'abacus', 'babbage',
-                      'colossus', 'eniac', 'ferranti']
+    DIVISION_NAMES = ('Quantum', 'Overclocked', 'Processor', 'Circuit', 'Transistor', 'Abacus', 'Babbage', 'Colossus',
+                 'Dragon', 'ENIAC', 'Ferranti', 'Grundy', 'Hobbit', 'Imagination', 'Jupiter', 'Komputer', 'Lambda')
 
     def __init__(self, bots: List[str], division_size: int=4, overlap_size: int=1):
         self.bots = bots
