@@ -256,7 +256,7 @@ def set_logo(blue_config, orange_config): #reused for logo later
         data = blue_config_file.read()
         data = data.split('\n')
         for line in data:
-            del_part = len('participant_config_0 = ')
+            del_part = len('logo = ')
             blue_logo = line[del_part:]
     if blue_logo is None:
         config_loc = blue_config.split('\\')[:-1]
@@ -271,7 +271,7 @@ def set_logo(blue_config, orange_config): #reused for logo later
         data = orange_config_file.read()
         data = data.split('\n')
         for line in data:
-            del_part = len('participant_config_0 = ')
+            del_part = len('logo = ')
             orange_logo = line[del_part:]
             if orange_logo is None:
                 config_loc = blue_config.split('\\')[:-1]
@@ -363,6 +363,8 @@ def do_reset_bar():
     global bot_num
     bot_num = 2
     boost_bar([[0, 0], [0, 0]])
+    set_names('Blue-Name', '')
+    set_names('Orange-Name', '')
 
 def get_scene_item(name):
     scenes = obs.obs_frontend_get_scenes()
@@ -383,9 +385,10 @@ def get_scene_item(name):
                 obs.sceneitem_list_release(items)
     obs.source_list_release(scenes)
 
+
 def set_text_pos():
-    pos = [119, 14]
-    hardcoded_width = 386
+    pos = [300, 14]
+    hardcoded_width = 250
     scale = [1.5, 1.5]
 
     sceneItem = get_scene_item('Blue-Name')
