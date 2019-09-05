@@ -11,7 +11,7 @@ from rlbottraining.training_exercise import TrainingExercise
 
 from autoleagueplay.match_result import MatchResult
 from autoleagueplay.replays import ReplayPreference, ReplayMonitor
-from autoleagueplay.spectator_hud import press_h, press_9
+from autoleagueplay.spectator_hud import press_h, press_9, press_pg_dwn, press_home
 
 
 class FailDueToNoReplay(Fail):
@@ -35,6 +35,8 @@ class MatchGrader(Grader):
         if not self.has_pressed_h:
             press_h()
             press_9()
+            press_home()
+            press_pg_dwn()
             self.has_pressed_h = True
         self.replay_monitor.ensure_monitoring()
         self.last_game_tick_packet = tick.game_tick_packet
