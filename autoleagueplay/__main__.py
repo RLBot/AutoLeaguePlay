@@ -2,7 +2,7 @@
 
 Usage:
     autoleagueplay setup <working_dir>
-    autoleagueplay run (odd | even) [--teamsize=T] [--replays=R] [--ignore-missing]
+    autoleagueplay run (odd | even) [--teamsize=T] [--replays=R] [--ignore-missing] [--autoshutdown=S]
     autoleagueplay bubble [--teamsize=T] [--replays=R]
     autoleagueplay list (odd | even)
     autoleagueplay results (odd | even)
@@ -18,6 +18,7 @@ Options:
     --replays=R                  What to do with the replays of the match. Valid values are 'ignore', 'save', and 'calculated_gg'. [default: calculated_gg]
     --teamsize=T                 How many players per team. [default: 1]
     --ignore-missing             Allow the script to run even though not all bots are in the bot directory.
+    --autoshutdown=S              Shutdown the system S seconds after autoleague ends, usefull for VMs. [default: 0]
     -h --help                    Show this screen.
     --version                    Show version.
 """
@@ -78,13 +79,14 @@ def main():
             replay_preference = ReplayPreference(arguments['--replays'])
             team_size = int(arguments['--teamsize'])
             odd_week = arguments['odd']
+            shutdown_time = int(arguments['--autoshutdown'])
 
             if not arguments['--ignore-missing']:
                 all_present = check_bot_folder(working_dir, odd_week)
                 if all_present:
-                    run_league_play(working_dir, odd_week, replay_preference, team_size)
+                    run_league_play(working_dir, odd_week, replay_preference, team_size, shutdown_time)
             else:
-                run_league_play(working_dir, odd_week, replay_preference, team_size)
+                run_league_play(working_dir, odd_week, replay_preference, team_size, shutdown_time)
 
         elif arguments['bubble']:
 

@@ -48,7 +48,7 @@ def run_match(participant_1: str, participant_2: str, match_config, replay_prefe
             return exercise_result.exercise.grader.match_result
 
 
-def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: ReplayPreference, team_size: int):
+def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: ReplayPreference, team_size: int, shutdowntime):
     """
     Run a league play event by running round robins for half the divisions. When done, a new ladder file is created.
     """
@@ -127,6 +127,9 @@ def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: 
     # Save new ladder
     Ladder.write(new_ladder, working_dir.new_ladder)
     print(f'Done. Saved new ladder as {working_dir.new_ladder.name}')
+    if shutdowntime != 0:
+        import subprocess
+        subprocess.call("shutdown.exe -s -t " + str(shutdowntime))
 
     # Remove overlay interface file now that we are done
     if working_dir.overlay_interface.exists():
