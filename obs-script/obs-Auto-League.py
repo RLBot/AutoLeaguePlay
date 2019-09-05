@@ -10,6 +10,8 @@ from rlbot.utils.logging_utils import get_logger
 from rlbot.utils.structures.game_interface import GameInterface
 from rlbot.utils.structures import game_data_struct
 import json
+from rlbot.parsing.custom_config import ConfigObject
+from rlbot.parsing.bot_config_bundle import BotConfigBundle, get_bot_config_bundle
 
 import rlbot.parsing.custom_config as cc
 SETUP = True
@@ -250,37 +252,18 @@ def show_division(div_num):
     pass
 
 def set_logo(blue_config, orange_config): #reused for logo later
-    blue_logo = None
-    orange_logo = None
-    with open(blue_config) as blue_config_file:  # Use file to refer to the file object
-        data = blue_config_file.read()
-        data = data.split('\n')
-        for line in data:
-            del_part = len('logo = ')
-            blue_logo = line[del_part:]
-    if blue_logo is None:
-        config_loc = blue_config.split('\\')[:-1]
-        config_loc[0] = config_loc[0] + '/'
-        logo_file = os.path.join(*config_loc, 'logo.png')
-        if os.path.isfile(logo_file):
-            blue_logo = logo_file
-        else:
-            blue_logo = os.path.join(files_path, 'logo.png')
+    default_logo = os.path.join(files_path, 'logo.png')
 
-    with open(orange_config) as orange_config_file:  # Use file to refer to the file object
-        data = orange_config_file.read()
-        data = data.split('\n')
-        for line in data:
-            del_part = len('logo = ')
-            orange_logo = line[del_part:]
-            if orange_logo is None:
-                config_loc = blue_config.split('\\')[:-1]
-                config_loc[0] = config_loc[0] + '/'
-                logo_file = os.path.join(*config_loc, 'logo.png')
-                if os.path.isfile(logo_file):
-                    orange_logo = logo_file
-                else:
-                    orange_logo = os.path.join(files_path, 'logo.png')
+    blue_config_bun = get_bot_config_bundle(blue_config)
+
+    orange_config_bun = get_bot_config_bundle(orange_config)
+
+    blue_logo = blue_config_bun.get_logo_file()
+    if blue_logo is None:
+        blue_logo = default_logo
+    orange_logo = orange_config_bun.get_logo_file()
+    if orange_logo is None:
+        orange_logo = default_logo
 
     scenes = obs.obs_frontend_get_scenes()
     if scenes is not None:
@@ -365,6 +348,7 @@ def do_reset_bar():
     boost_bar([[0, 0], [0, 0]])
     set_names('Blue-Name', '')
     set_names('Orange-Name', '')
+    set_logo(r'C:\Users\fabio\fabio\Software\Programing\RLBot\AutoLeaguePlay\autoleagueplay\bots\Skybot\Skybot\SkyBot.cfg', r'C:\Users\fabio\fabio\Software\Programing\RLBot\AutoLeaguePlay\autoleagueplay\bots\Kamael\Kamael\Kamael.cfg')
 
 def get_scene_item(name):
     scenes = obs.obs_frontend_get_scenes()
