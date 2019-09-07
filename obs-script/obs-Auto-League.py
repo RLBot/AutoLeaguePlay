@@ -371,7 +371,7 @@ def get_scene_item(name):
 
 
 def set_text_pos():
-    pos = [300, 14]
+    pos = [290, 14]
     hardcoded_width = 250
     scale = [1.5, 1.5]
 
