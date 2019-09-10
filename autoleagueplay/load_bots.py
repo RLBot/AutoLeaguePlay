@@ -3,6 +3,7 @@ import subprocess
 import sys
 from datetime import datetime
 from os.path import relpath
+from pathlib import Path
 from typing import Dict, Mapping, Optional
 from zipfile import ZipFile
 
@@ -13,6 +14,8 @@ from autoleagueplay.ladder import Ladder
 from autoleagueplay.paths import PackageFiles, WorkingDir
 from autoleagueplay.versioned_bot import VersionedBot
 
+DEFAULT_TIMESTAMP = datetime.utcfromtimestamp(0)
+
 # Maps Psyonix bots to their skill value. Initialized in load_all_bots()
 psyonix_bots: Dict[str, float] = dict()
 
@@ -20,20 +23,29 @@ psyonix_bots: Dict[str, float] = dict()
 def load_all_bots(working_dir: WorkingDir) -> Mapping[str, BotConfigBundle]:
     bots = dict(working_dir.get_bots())
 
-    # Psyonix bots
-    psyonix_allstar = get_bot_config_bundle(PackageFiles.psyonix_allstar)
-    psyonix_pro = get_bot_config_bundle(PackageFiles.psyonix_pro)
-    psyonix_rookie = get_bot_config_bundle(PackageFiles.psyonix_rookie)
+    psyonix_allstar, psyonix_pro, psyonix_rookie = load_psyonix_bots()
     bots[psyonix_allstar.name] = psyonix_allstar
     bots[psyonix_pro.name] = psyonix_pro
     bots[psyonix_rookie.name] = psyonix_rookie
+
+    return bots
+
+
+def load_psyonix_bots():
+    """
+    Loads Psyonix bot configs and records some data about skill level.
+    """
+    psyonix_allstar = get_bot_config_bundle(PackageFiles.psyonix_allstar)
+    psyonix_pro = get_bot_config_bundle(PackageFiles.psyonix_pro)
+    psyonix_rookie = get_bot_config_bundle(PackageFiles.psyonix_rookie)
+
     # Skill values for later. This way the user can rename the Psyonix bots by changing the config files, but we still
     # have their correct skill
     psyonix_bots[psyonix_allstar.name] = 1.0
     psyonix_bots[psyonix_pro.name] = 0.5
     psyonix_bots[psyonix_rookie.name] = 0.0
 
-    return bots
+    return psyonix_allstar, psyonix_pro, psyonix_rookie
 
 
 def check_bot_folder(working_dir: WorkingDir, odd_week: Optional[bool]=None) -> bool:
@@ -83,6 +95,11 @@ def load_all_bots_versioned(working_dir: WorkingDir) -> Mapping[str, VersionedBo
             versioned_bot = VersionedBot(bot_config, date)
             versioned_bots.add(versioned_bot)
 
+    psyonix_allstar, psyonix_pro, psyonix_rookie = load_psyonix_bots()
+    versioned_bots.add(VersionedBot(psyonix_allstar, DEFAULT_TIMESTAMP))
+    versioned_bots.add(VersionedBot(psyonix_pro, DEFAULT_TIMESTAMP))
+    versioned_bots.add(VersionedBot(psyonix_rookie, DEFAULT_TIMESTAMP))
+
     return {
         vb.get_unversioned_key(): vb
         for vb in versioned_bots
@@ -92,10 +109,12 @@ def load_all_bots_versioned(working_dir: WorkingDir) -> Mapping[str, VersionedBo
 def get_modified_date(folder) -> datetime:
     ignored_directories = ['__pycache__', '.git']
     ignored_files = ['RLBot_Core_Interface.dll']
+    ignored_types = ['.cfg']
     max_timestamp = 0
     for root, dirs, files in os.walk(folder, topdown=True):
         dirs[:] = [d for d in dirs if d not in ignored_directories]
-        times = [os.stat(os.path.join(root, f)).st_mtime for f in files if f not in ignored_files]
+        times = [os.stat(os.path.join(root, f)).st_mtime for f in files
+                 if f not in ignored_files and Path(f).suffix not in ignored_types]
         if len(times) > 0:
             timestamp = max(times)
             if timestamp > max_timestamp:
