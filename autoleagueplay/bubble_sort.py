@@ -1,22 +1,18 @@
 import os
 import subprocess
-import sys
 import time
 from dataclasses import dataclass
 from datetime import datetime
-from os.path import relpath
 from time import sleep
-
-from rlbot.parsing.directory_scanner import scan_directory_for_bot_configs
 
 from autoleagueplay.bubble_sort_overlay import BubbleSortOverlayData
 from autoleagueplay.ladder import Ladder
+from autoleagueplay.load_bots import load_all_bots_versioned
 from autoleagueplay.match_configurations import make_match_config
 from autoleagueplay.match_result import MatchResult
 from autoleagueplay.paths import WorkingDir
 from autoleagueplay.replays import ReplayPreference
 from autoleagueplay.run_matches import run_match
-from autoleagueplay.versioned_bot import VersionedBot
 
 
 @dataclass
@@ -51,36 +47,14 @@ class BubbleSorter:
 
         subprocess.call(['git', 'pull'], cwd=git_root)
 
-        bot_folders = [p for p in self.working_dir.bots.iterdir() if p.is_dir()]
-
-        versioned_bots = set()
-
-        for folder in bot_folders:
-            relative_path = relpath(folder, git_root)
-            iso_date_binary = subprocess.check_output(
-                ["git", "log", "-n", "1", '--format="%ad"', "--date=iso-strict", "--", relative_path], cwd=git_root)
-            iso_date = iso_date_binary.decode(sys.stdout.encoding).strip("\"\n")
-
-            if len(iso_date) > 0:
-                date = datetime.fromisoformat(iso_date)
-            else:
-                date = get_modified_date(folder)
-
-            for bot_config in scan_directory_for_bot_configs(folder):
-                versioned_bot = VersionedBot(bot_config, date)
-                print(versioned_bot)
-                versioned_bots.add(versioned_bot)
+        self.versioned_bots_by_name = load_all_bots_versioned(self.working_dir)
 
         self.bundle_map = {
             vb.get_unversioned_key(): vb.bot_config
-            for vb in versioned_bots
-        }
-        self.versioned_bots_by_name = {
-            vb.get_unversioned_key(): vb
-            for vb in versioned_bots
+            for vb in self.versioned_bots_by_name.values()
         }
 
-        bots_available = set([vb.get_unversioned_key() for vb in versioned_bots])
+        bots_available = set([vb.get_unversioned_key() for vb in self.versioned_bots_by_name.values()])
         incoming_bots = bots_available.difference(set(self.ladder.bots))
         self.ladder.bots.extend(incoming_bots)
         self.ladder.bots = [bot for bot in self.ladder.bots if bot in bots_available]

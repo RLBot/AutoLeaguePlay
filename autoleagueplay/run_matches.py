@@ -8,7 +8,7 @@ from rlbottraining.exercise_runner import run_playlist
 from autoleagueplay.fake_renderer import FakeRenderer
 from autoleagueplay.generate_matches import generate_round_robin_matches
 from autoleagueplay.ladder import Ladder
-from autoleagueplay.load_bots import load_all_bots
+from autoleagueplay.load_bots import load_all_bots_versioned
 from autoleagueplay.match_configurations import make_match_config
 from autoleagueplay.match_exercise import MatchExercise, MatchGrader
 from autoleagueplay.match_result import CombinedScore, MatchResult
@@ -48,12 +48,13 @@ def run_match(participant_1: str, participant_2: str, match_config, replay_prefe
             return exercise_result.exercise.grader.match_result
 
 
-def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: ReplayPreference, team_size: int, shutdowntime):
+def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: ReplayPreference, team_size: int,
+                    shutdowntime: int, skip_stale_rematches: bool):
     """
     Run a league play event by running round robins for half the divisions. When done, a new ladder file is created.
     """
 
-    bots = load_all_bots(working_dir)
+    bots = load_all_bots_versioned(working_dir)
     ladder = Ladder.read(working_dir.ladder)
 
     # We need the result of every match to create the next ladder. For each match in each round robin, if a result
@@ -76,31 +77,47 @@ def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: 
 
         for match_participants in rr_matches:
 
+            versioned_result_path = working_dir.get_version_specific_match_result(
+                bots[match_participants[0]], bots[match_participants[1]])
+
             # Check if match has already been play, i.e. the result file already exist
             result_path = working_dir.get_match_result(div_index, match_participants[0], match_participants[1])
-            if result_path.exists():
+
+            if skip_stale_rematches and versioned_result_path.exists():
+                path_to_use = versioned_result_path
+            else:
+                path_to_use = result_path
+
+            if path_to_use.exists():
                 # Found existing result
                 try:
-                    print(f'Found existing result {result_path.name}')
-                    result = MatchResult.read(result_path)
+                    print(f'Found existing result {path_to_use.name}')
+                    result = MatchResult.read(path_to_use)
 
                     rr_results.append(result)
 
                 except Exception as e:
-                    print(f'Error loading result {result_path.name}. Fix/delete the result and run script again.')
+                    print(f'Error loading result {path_to_use.name}. Fix/delete the result and run script again.')
                     raise e
 
             else:
                 # Let overlay know which match we are about to start
-                overlay_data = OverlayData(div_index, bots[match_participants[0]].config_path, bots[match_participants[1]].config_path)
+                overlay_data = OverlayData(
+                    div_index,
+                    bots[match_participants[0]].bot_config.config_path,
+                    bots[match_participants[1]].bot_config.config_path)
+
                 overlay_data.write(working_dir.overlay_interface)
 
                 participant_1 = bots[match_participants[0]]
                 participant_2 = bots[match_participants[1]]
-                match_config = make_match_config(participant_1, participant_2, team_size)
-                result = run_match(participant_1.name, participant_2.name, match_config, replay_preference)
+                match_config = make_match_config(participant_1.bot_config, participant_2.bot_config, team_size)
+                result = run_match(participant_1.bot_config.name, participant_2.bot_config.name, match_config,
+                                   replay_preference)
                 result.write(result_path)
-                print(f'Match finished {result.blue_goals}-{result.orange_goals}. Saved result as {result_path}')
+                result.write(versioned_result_path)
+                print(f'Match finished {result.blue_goals}-{result.orange_goals}. Saved result as {result_path}'
+                      f' and also {versioned_result_path}')
 
                 rr_results.append(result)
 

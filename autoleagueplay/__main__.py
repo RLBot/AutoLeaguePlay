@@ -2,7 +2,7 @@
 
 Usage:
     autoleagueplay setup <working_dir>
-    autoleagueplay run (odd | even) [--teamsize=T] [--replays=R] [--ignore-missing] [--autoshutdown=S]
+    autoleagueplay run (odd | even) [--teamsize=T] [--replays=R] [--ignore-missing] [--autoshutdown=S] [--skip-stale-rematches]
     autoleagueplay bubble [--teamsize=T] [--replays=R]
     autoleagueplay list (odd | even)
     autoleagueplay results (odd | even)
@@ -21,6 +21,7 @@ Options:
     --autoshutdown=S              Shutdown the system S seconds after autoleague ends, usefull for VMs. [default: 0]
     -h --help                    Show this screen.
     --version                    Show version.
+    --skip-stale-rematches       Skip matches when the same versions of both bots have already played each other.
 """
 
 import sys
@@ -80,13 +81,14 @@ def main():
             team_size = int(arguments['--teamsize'])
             odd_week = arguments['odd']
             shutdown_time = int(arguments['--autoshutdown'])
+            skip_stale = arguments['--skip-stale-rematches']
 
             if not arguments['--ignore-missing']:
                 all_present = check_bot_folder(working_dir, odd_week)
                 if all_present:
-                    run_league_play(working_dir, odd_week, replay_preference, team_size, shutdown_time)
+                    run_league_play(working_dir, odd_week, replay_preference, team_size, shutdown_time, skip_stale)
             else:
-                run_league_play(working_dir, odd_week, replay_preference, team_size, shutdown_time)
+                run_league_play(working_dir, odd_week, replay_preference, team_size, shutdown_time, skip_stale)
 
         elif arguments['bubble']:
 

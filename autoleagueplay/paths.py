@@ -54,7 +54,7 @@ class WorkingDir:
     def get_version_specific_match_result(self, bot1: VersionedBot, bot2: VersionedBot) -> Path:
         bot_keys = [bot1.get_key(), bot2.get_key()]
         bot_keys.sort()
-        match_name = f'{bot_keys[0]}_vs_{bot_keys[1]}.json'
+        match_name = f'versioned_{bot_keys[0]}_vs_{bot_keys[1]}.json'
         return self.match_results / match_name
 
     def get_bots(self) -> Mapping[str, BotConfigBundle]:
