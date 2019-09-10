@@ -14,7 +14,8 @@ Usage:
 ```
 autoleagueplay setup <working_dir>                           | Setup a league directory. Required for some other commands.
 autoleagueplay run (odd | even) [--teamsize=T] [--replays=R]
-                                [--ignore-missing]           | Runs an odd or even week.
+                                [--ignore-missing]           
+                                [--skip-stale-rematches]     | Runs an odd or even week.
 autoleagueplay bubble [--teamsize=T] [--replays=R]           | Runs a bubble sort.
 autoleagueplay list (odd | even)                             | Lists all matches for the next odd or even week.
 autoleagueplay results (odd | even)                          | Lists the results.
@@ -22,19 +23,22 @@ autoleagueplay fetch <week_num>                              | Fetches the given
 autoleagueplay check                                         | Checks if all bots are present in the bot folder.
 autoleagueplay test                                          | Test run all bots to see if they auto-start
 autoleagueplay leaderboard (odd | even)                      | Generate a leaderboard image.
-autoleagueplay leaderboard (clip | symbols | legend)         | Generate a clip or legend for the leaderboard, or update symbols. 
+autoleagueplay leaderboard (clip | symbols | legend)         | Generate a clip or legend for the leaderboard, or update symbols.
+autoleagueplay results-to-version-files <results_file>       | Generates match result files by parsing the output of the results command.
+autoleagueplay unzip                                         | Unzips all the zip files in the bot folder.
 autoleagueplay (-h | --help)                                 | Show commands and options.
 autoleagueplay --version                                     | Show version.
 ```
 
 Options:
 ```
---replays=R          What to do with the replays of the match. Valid values are 'save', and 'calculated_gg'. [default: calculated_gg]
---list               Instead of playing the matches, the list of matches is printed.
---results            Like --list but also shows the result of matches that has been played.
---ignore-missing     Allow the script to run even though not all bots are in the bot directory.
--h --help            Show this screen.
---version            Show version.
+--replays=R             What to do with the replays of the match. Valid values are 'save', and 'calculated_gg'. [default: calculated_gg]
+--list                  Instead of playing the matches, the list of matches is printed.
+--results               Like --list but also shows the result of matches that has been played.
+--ignore-missing        Allow the script to run even though not all bots are in the bot directory.
+--skip-stale-rematches  Skip matches when the same versions of both bots have already played each other.
+-h --help               Show this screen.
+--version               Show version.
 ```
 
 The working directory contains:
