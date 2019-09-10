@@ -12,6 +12,7 @@ Usage:
     autoleagueplay leaderboard (odd | even)
     autoleagueplay leaderboard (clip | symbols | legend)
     autoleagueplay results-to-version-files <results_file> <fallback_time>
+    autoleagueplay unzip
     autoleagueplay (-h | --help)
     autoleagueplay --version
 
@@ -34,7 +35,7 @@ from autoleagueplay.bubble_sort import run_bubble_sort
 from autoleagueplay.leaderboard.leaderboard import generate_leaderboard, generate_leaderboard_clip
 from autoleagueplay.leaderboard.symbols import generate_symbols, generate_legend
 from autoleagueplay.list_matches import list_matches, list_results, parse_results_and_write_files
-from autoleagueplay.load_bots import check_bot_folder
+from autoleagueplay.load_bots import check_bot_folder, unzip_all_bots
 from autoleagueplay.paths import WorkingDir
 from autoleagueplay.replays import ReplayPreference
 from autoleagueplay.run_matches import run_league_play
@@ -128,6 +129,9 @@ def main():
             time_string = arguments['<fallback_time>']
             fallback_time = datetime.datetime.fromisoformat(time_string)
             parse_results_and_write_files(working_dir, working_dir._working_dir / results_file, fallback_time)
+
+        elif arguments['unzip']:
+            unzip_all_bots(working_dir)
 
         else:
             raise NotImplementedError()
