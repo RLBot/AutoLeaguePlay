@@ -11,6 +11,7 @@ Usage:
     autoleagueplay fetch <week_num>
     autoleagueplay leaderboard (odd | even)
     autoleagueplay leaderboard (clip | symbols | legend)
+    autoleagueplay results-to-version-files <results_file> <fallback_time>
     autoleagueplay (-h | --help)
     autoleagueplay --version
 
@@ -23,16 +24,16 @@ Options:
     --version                    Show version.
     --skip-stale-rematches       Skip matches when the same versions of both bots have already played each other.
 """
-
+import datetime
 import sys
 from pathlib import Path
 
 from docopt import docopt
 
+from autoleagueplay.bubble_sort import run_bubble_sort
 from autoleagueplay.leaderboard.leaderboard import generate_leaderboard, generate_leaderboard_clip
 from autoleagueplay.leaderboard.symbols import generate_symbols, generate_legend
-from autoleagueplay.bubble_sort import run_bubble_sort
-from autoleagueplay.list_matches import list_matches, list_results
+from autoleagueplay.list_matches import list_matches, list_results, parse_results_and_write_files
 from autoleagueplay.load_bots import check_bot_folder
 from autoleagueplay.paths import WorkingDir
 from autoleagueplay.replays import ReplayPreference
@@ -121,6 +122,12 @@ def main():
             print(f'Successfully fetched week {week_num} to \'{working_dir.ladder}\':')
             for bot in ladder.bots:
                 print(bot)
+
+        elif arguments['results-to-version-files']:
+            results_file = arguments['<results_file>']
+            time_string = arguments['<fallback_time>']
+            fallback_time = datetime.datetime.fromisoformat(time_string)
+            parse_results_and_write_files(working_dir, working_dir._working_dir / results_file, fallback_time)
 
         else:
             raise NotImplementedError()
