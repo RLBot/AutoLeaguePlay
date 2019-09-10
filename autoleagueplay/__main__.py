@@ -11,7 +11,7 @@ Usage:
     autoleagueplay fetch <week_num>
     autoleagueplay leaderboard (odd | even)
     autoleagueplay leaderboard (clip | symbols | legend)
-    autoleagueplay results-to-version-files <results_file> <fallback_time>
+    autoleagueplay results-to-version-files <results_file>
     autoleagueplay unzip
     autoleagueplay (-h | --help)
     autoleagueplay --version
@@ -35,7 +35,7 @@ from autoleagueplay.bubble_sort import run_bubble_sort
 from autoleagueplay.leaderboard.leaderboard import generate_leaderboard, generate_leaderboard_clip
 from autoleagueplay.leaderboard.symbols import generate_symbols, generate_legend
 from autoleagueplay.list_matches import list_matches, list_results, parse_results_and_write_files
-from autoleagueplay.load_bots import check_bot_folder, unzip_all_bots
+from autoleagueplay.load_bots import check_bot_folder, unzip_all_bots, DEFAULT_TIMESTAMP
 from autoleagueplay.paths import WorkingDir
 from autoleagueplay.replays import ReplayPreference
 from autoleagueplay.run_matches import run_league_play
@@ -126,9 +126,7 @@ def main():
 
         elif arguments['results-to-version-files']:
             results_file = arguments['<results_file>']
-            time_string = arguments['<fallback_time>']
-            fallback_time = datetime.datetime.fromisoformat(time_string)
-            parse_results_and_write_files(working_dir, working_dir._working_dir / results_file, fallback_time)
+            parse_results_and_write_files(working_dir, working_dir._working_dir / results_file, DEFAULT_TIMESTAMP)
 
         elif arguments['unzip']:
             unzip_all_bots(working_dir)
