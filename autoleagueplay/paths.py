@@ -16,6 +16,7 @@
 """
 This module contains file system paths that are used by autoleagueplay.
 """
+import datetime
 from pathlib import Path
 from typing import Mapping
 
@@ -52,7 +53,17 @@ class WorkingDir:
         return self.match_results / match_name
 
     def get_version_specific_match_result(self, bot1: VersionedBot, bot2: VersionedBot) -> Path:
-        bot_keys = [bot1.get_key(), bot2.get_key()]
+        return self._get_version_specific_match_result_from_keys(bot1.get_key(), bot2.get_key())
+
+    def get_version_specific_match_result_from_times(
+            self, name1: str, updated_date1: datetime, name2: str, updated_date2: datetime) -> Path:
+
+        return self._get_version_specific_match_result_from_keys(
+            VersionedBot.create_key(name1, updated_date1),
+            VersionedBot.create_key(name2, updated_date2))
+
+    def _get_version_specific_match_result_from_keys(self, key1: str, key2: str):
+        bot_keys = [key1, key2]
         bot_keys.sort()
         match_name = f'versioned_{bot_keys[0]}_vs_{bot_keys[1]}.json'
         return self.match_results / match_name

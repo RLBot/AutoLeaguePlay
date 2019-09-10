@@ -12,7 +12,11 @@ class VersionedBot:
         return self.get_key()
 
     def get_key(self):
-        return f'{self.get_unversioned_key()}-{self.updated_date.isoformat().replace(":", "-")}'
+        return VersionedBot.create_key(self.get_unversioned_key(), self.updated_date)
 
     def get_unversioned_key(self):
         return self.bot_config.name
+
+    @staticmethod
+    def create_key(name: str, updated_date: datetime):
+        return f'{name}-{updated_date.isoformat().replace(":", "-")}'
