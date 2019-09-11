@@ -110,9 +110,6 @@ def main():
         elif arguments['fetch']:
             season = int(arguments['<season_num>'])
             week_num = int(arguments['<week_num>'])
-            if week_num < 0:
-                print(f'Week number must be a positive integer.')
-                sys.exit(1)
 
             ladder = fetch_ladder_from_sheets(season, week_num)
             ladder.write(working_dir.ladder)
