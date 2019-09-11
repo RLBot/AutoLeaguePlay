@@ -16,8 +16,8 @@ from autoleagueplay.versioned_bot import VersionedBot
 
 DEFAULT_TIMESTAMP = datetime.utcfromtimestamp(0)
 
-# Maps Psyonix bots to their skill value. Initialized in load_all_bots()
-psyonix_bots: Dict[str, float] = dict()
+# Maps Psyonix bots to their skill value. Initialized in load_psyonix_bots()
+psyonix_bots_skill: Dict[str, float] = dict()
 
 
 def load_all_bots(working_dir: WorkingDir) -> Mapping[str, BotConfigBundle]:
@@ -39,11 +39,10 @@ def load_psyonix_bots():
     psyonix_pro = get_bot_config_bundle(PackageFiles.psyonix_pro)
     psyonix_rookie = get_bot_config_bundle(PackageFiles.psyonix_rookie)
 
-    # Skill values for later. This way the user can rename the Psyonix bots by changing the config files, but we still
-    # have their correct skill
-    psyonix_bots[psyonix_allstar.name] = 1.0
-    psyonix_bots[psyonix_pro.name] = 0.5
-    psyonix_bots[psyonix_rookie.name] = 0.0
+    # Map Psyonix names to their skill value
+    psyonix_bots_skill[psyonix_allstar.name] = 1.0
+    psyonix_bots_skill[psyonix_pro.name] = 0.5
+    psyonix_bots_skill[psyonix_rookie.name] = 0.0
 
     return psyonix_allstar, psyonix_pro, psyonix_rookie
 
