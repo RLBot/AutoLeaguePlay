@@ -1,4 +1,5 @@
 import pickle
+from dataclasses import dataclass
 from typing import List
 
 from google.auth.transport.requests import Request
@@ -8,26 +9,44 @@ from googleapiclient.discovery import build
 from autoleagueplay.ladder import Ladder
 from autoleagueplay.paths import PackageFiles
 
-SHEET_ID = '1XULvW97g46EdrYRuhiHBfARDkviULYjRO5dA8sMmxkY'
-SHEET_NAME = 'Off Season 0'
-INITIAL_LADDER_COL = 4   # D
-RANK_ONE_ROW = 4
-LADDER_LENGTH = 45
-LADDER_SPACING = 1   # One column between each ladder
+
+@dataclass
+class SeasonSheet:
+    season: int
+    sheet_id: str
+    sheet_name: str
+    initial_ladder_col: int  # E.g. column D is 4
+    rank_one_row: int
+    ladder_length: int
+    ladder_spacing: int  # Number of columns between each ladder
+
+
+# The sheet info for each season
+SEASONS = [
+    SeasonSheet(0, '1XULvW97g46EdrYRuhiHBfARDkviULYjRO5dA8sMmxkY', 'Off Season 0', 4, 4, 50, 1),
+    SeasonSheet(1, '1XULvW97g46EdrYRuhiHBfARDkviULYjRO5dA8sMmxkY', 'Season 1', 4, 4, 60, 2),
+]
 
 # If modifying these scopes, delete the file 'cred/sheets-api-token.pickle'
 SHEETS_SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 
-def fetch_ladder_from_sheets(week_num: int) -> Ladder:
-    values = get_values_from_sheet(get_credentials(), SHEET_ID, get_ladder_range(week_num), SHEET_NAME)
-    bots = [row[0] for row in values]
+def fetch_ladder_from_sheets(season: int, week_num: int) -> Ladder:
+    bots = fetch_bots_from_sheets(season, week_num)
     return Ladder(bots)
 
 
-def get_ladder_range(week_num: int) -> str:
-    col = get_col_name(INITIAL_LADDER_COL + week_num * (1 + LADDER_SPACING))
-    return f'{col}{RANK_ONE_ROW}:{col}{RANK_ONE_ROW + LADDER_LENGTH}'
+def fetch_bots_from_sheets(season: int, week_num: int) -> List[str]:
+    assert 0 <= season < len(SEASONS), 'Invalid or unknown season number'
+    season_sheet = SEASONS[season]
+    range = get_ladder_range(season_sheet, week_num)
+    values = get_values_from_sheet(get_credentials(), season_sheet.sheet_id, range, season_sheet.sheet_name)
+    return [row[0] for row in values]
+
+
+def get_ladder_range(season_sheet: SeasonSheet, week_num: int) -> str:
+    col = get_col_name(season_sheet.initial_ladder_col + week_num * (1 + season_sheet.ladder_spacing))
+    return f'{col}{season_sheet.rank_one_row}:{col}{season_sheet.rank_one_row + season_sheet.ladder_length}'
 
 
 def get_col_name(col_num: int) -> str:
@@ -96,6 +115,5 @@ def get_values_from_sheet(creds, spreadsheet_id: str, range: str, sheet_name: st
 
 if __name__ == '__main__':
     # As test, fetch and print the initial ladder
-    values = get_values_from_sheet(get_credentials(), SHEET_ID, get_ladder_range(0))
-    bots = [row[0] for row in values]
+    bots = fetch_bots_from_sheets(1, 0)
     print(bots)
