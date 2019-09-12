@@ -2,9 +2,9 @@
 
 Usage:
     autoleagueplay setup <working_dir>
-    autoleagueplay run (odd | even) [--teamsize=T] [--replays=R] [--ignore-missing] [--autoshutdown=S] [--skip-stale-rematches]
+    autoleagueplay run (odd | even) [--teamsize=T] [--replays=R] [--ignore-missing] [--autoshutdown=S] [--stale-rematch-threshold=X]
     autoleagueplay bubble [--teamsize=T] [--replays=R]
-    autoleagueplay list (odd | even)
+    autoleagueplay list (odd | even) [--stale-rematch-threshold=X]
     autoleagueplay results (odd | even)
     autoleagueplay check
     autoleagueplay test
@@ -23,7 +23,7 @@ Options:
     --autoshutdown=S              Shutdown the system S seconds after autoleague ends, usefull for VMs. [default: 0]
     -h --help                    Show this screen.
     --version                    Show version.
-    --skip-stale-rematches       Skip matches when the same versions of both bots have already played each other.
+    --stale-rematch-threshold=X  Skip matches when a bot has beaten another X times in a row, and neither of them have updated their code.
 """
 import datetime
 import sys
@@ -65,6 +65,10 @@ def main():
 
         working_dir = WorkingDir(Path(settings.working_dir_raw))
 
+        stale_rematch_threshold = 0
+        if arguments['--stale-rematch-threshold']:
+            stale_rematch_threshold = int(arguments['--stale-rematch-threshold'])
+
         if arguments['leaderboard']:
             if arguments['odd'] or arguments['even']:
                 generate_leaderboard(working_dir, arguments['odd'])
@@ -83,14 +87,13 @@ def main():
             team_size = int(arguments['--teamsize'])
             odd_week = arguments['odd']
             shutdown_time = int(arguments['--autoshutdown'])
-            skip_stale = arguments['--skip-stale-rematches']
 
             if not arguments['--ignore-missing']:
                 all_present = check_bot_folder(working_dir, odd_week)
                 if all_present:
-                    run_league_play(working_dir, odd_week, replay_preference, team_size, shutdown_time, skip_stale)
+                    run_league_play(working_dir, odd_week, replay_preference, team_size, shutdown_time, stale_rematch_threshold)
             else:
-                run_league_play(working_dir, odd_week, replay_preference, team_size, shutdown_time, skip_stale)
+                run_league_play(working_dir, odd_week, replay_preference, team_size, shutdown_time, stale_rematch_threshold)
 
         elif arguments['bubble']:
 
@@ -100,7 +103,7 @@ def main():
             run_bubble_sort(working_dir, team_size, replay_preference)
 
         elif arguments['list']:
-            list_matches(working_dir, arguments['odd'])
+            list_matches(working_dir, arguments['odd'], stale_rematch_threshold)
 
         elif arguments['results']:
             list_results(working_dir, arguments['odd'])

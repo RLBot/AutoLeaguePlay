@@ -1,4 +1,5 @@
 import time
+from pathlib import Path
 
 from rlbot.setup_manager import setup_manager_context
 from rlbot.training.training import Fail
@@ -10,10 +11,12 @@ from autoleagueplay.ladder import Ladder
 from autoleagueplay.load_bots import load_all_bots_versioned
 from autoleagueplay.match_configurations import make_match_config
 from autoleagueplay.match_exercise import MatchExercise, MatchGrader
+from autoleagueplay.match_history import MatchHistory
 from autoleagueplay.match_result import CombinedScore, MatchResult
 from autoleagueplay.overlay import OverlayData
 from autoleagueplay.paths import WorkingDir
 from autoleagueplay.replays import ReplayPreference, ReplayMonitor
+from autoleagueplay.versioned_bot import VersionedBot
 
 logger = get_logger('autoleagueplay')
 
@@ -46,7 +49,7 @@ def run_match(participant_1: str, participant_2: str, match_config, replay_prefe
 
 
 def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: ReplayPreference, team_size: int,
-                    shutdowntime: int, skip_stale_rematches: bool):
+                    shutdowntime: int, stale_rematch_threshold: int = 0):
     """
     Run a league play event by running round robins for half the divisions. When done, a new ladder file is created.
     """
@@ -74,46 +77,36 @@ def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: 
 
         for match_participants in rr_matches:
 
-            versioned_result_path = working_dir.get_version_specific_match_result(
-                bots[match_participants[0]], bots[match_participants[1]])
+            # Check if match has already been played during THIS session. Maybe something crashed and we had to
+            # restart autoleague, but we want to pick up where we left off.
+            session_result_path = working_dir.get_match_result(div_index, match_participants[0], match_participants[1])
+            participant_1 = bots[match_participants[0]]
+            participant_2 = bots[match_participants[1]]
 
-            # Check if match has already been play, i.e. the result file already exist
-            result_path = working_dir.get_match_result(div_index, match_participants[0], match_participants[1])
+            historical_result = find_historical_result(participant_1, participant_2, session_result_path,
+                                                   stale_rematch_threshold, working_dir)
 
-            if skip_stale_rematches and versioned_result_path.exists():
-                path_to_use = versioned_result_path
-            else:
-                path_to_use = result_path
-
-            if path_to_use.exists():
-                # Found existing result
-                try:
-                    print(f'Found existing result {path_to_use.name}')
-                    result = MatchResult.read(path_to_use)
-
-                    rr_results.append(result)
-
-                except Exception as e:
-                    print(f'Error loading result {path_to_use.name}. Fix/delete the result and run script again.')
-                    raise e
+            if historical_result is not None:
+                rr_results.append(historical_result)
+                # Write to session result, but do NOT write to versioned history.
+                historical_result.write(session_result_path)
 
             else:
                 # Let overlay know which match we are about to start
                 overlay_data = OverlayData(
                     div_index,
-                    bots[match_participants[0]].bot_config.config_path,
-                    bots[match_participants[1]].bot_config.config_path)
+                    participant_1.bot_config.config_path,
+                    participant_2.bot_config.config_path)
 
                 overlay_data.write(working_dir.overlay_interface)
 
-                participant_1 = bots[match_participants[0]]
-                participant_2 = bots[match_participants[1]]
                 match_config = make_match_config(participant_1.bot_config, participant_2.bot_config, team_size)
                 result = run_match(participant_1.bot_config.name, participant_2.bot_config.name, match_config,
                                    replay_preference)
-                result.write(result_path)
+                result.write(session_result_path)
+                versioned_result_path = working_dir.get_version_specific_match_result(participant_1, participant_2)
                 result.write(versioned_result_path)
-                print(f'Match finished {result.blue_goals}-{result.orange_goals}. Saved result as {result_path}'
+                print(f'Match finished {result.blue_goals}-{result.orange_goals}. Saved result as {session_result_path}'
                       f' and also {versioned_result_path}')
 
                 rr_results.append(result)
@@ -150,3 +143,26 @@ def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: 
         working_dir.overlay_interface.unlink()
 
     return new_ladder
+
+
+def find_historical_result(bot1: VersionedBot, bot2: VersionedBot, session_result_path: Path,
+                           stale_rematch_threshold: int, working_dir: WorkingDir):
+    if session_result_path.exists():
+        # Found existing result
+        try:
+            print(f'Found existing result {session_result_path.name}')
+            return MatchResult.read(session_result_path)
+
+        except Exception as e:
+            print(f'Error loading result {session_result_path.name}. Fix/delete the result and run script again.')
+            raise e
+    else:
+        if stale_rematch_threshold > 0:
+
+            match_history = MatchHistory(working_dir.get_version_specific_match_files(bot1.get_key(), bot2.get_key()))
+            if not match_history.is_empty():
+                streak = match_history.get_current_streak_length()
+                if streak >= stale_rematch_threshold:
+                    return match_history.get_latest_result()
+
+    return None

@@ -5,17 +5,23 @@ from pathlib import Path
 from autoleagueplay.generate_matches import get_playing_division_indices, generate_round_robin_matches
 from autoleagueplay.ladder import Ladder
 from autoleagueplay.load_bots import load_all_bots_versioned
+from autoleagueplay.match_history import MatchHistory
 from autoleagueplay.match_result import MatchResult, CombinedScore
 from autoleagueplay.paths import WorkingDir
 
 
-def list_matches(working_dir: WorkingDir, odd_week: bool):
+def list_matches(working_dir: WorkingDir, odd_week: bool, stale_rematch_threshold: int = 0):
     """
     Prints all the matches that will be run this week.
+
+    :param stale_rematch_threshold: If a bot has won this number of matches in a row against a particular opponent
+    and neither have had their code updated, we will consider it to be a stale rematch and skip future matches.
+    If 0 is passed, we will not skip anything.
     """
 
     ladder = Ladder.read(working_dir.ladder)
     playing_division_indices = get_playing_division_indices(ladder, odd_week)
+    bots = load_all_bots_versioned(working_dir)
 
     if len(ladder.bots) < 2:
         print(f'Not enough bots on the ladder to play any matches')
@@ -23,15 +29,35 @@ def list_matches(working_dir: WorkingDir, odd_week: bool):
 
     print(f'Matches to play:')
 
+    num_matches = 0
+    num_skipped = 0
+    num_tossups = 0
+
     # The divisions play in reverse order, but we don't print them that way.
     for div_index in playing_division_indices:
-        print(f'--- {Ladder.DIVISION_NAMES[div_index]} division ---')
+        division_name = Ladder.DIVISION_NAMES[div_index] if div_index < len(Ladder.DIVISION_NAMES) else div_index
+        print(f'--- {division_name} division ---')
 
         rr_bots = ladder.round_robin_participants(div_index)
         rr_matches = generate_round_robin_matches(rr_bots)
 
         for match_participants in rr_matches:
+            if stale_rematch_threshold > 0:
+                bot1 = bots[match_participants[0]]
+                bot2 = bots[match_participants[1]]
+                match_history = MatchHistory(working_dir.get_version_specific_match_files(bot1.get_key(), bot2.get_key()))
+                if not match_history.is_empty():
+                    streak = match_history.get_current_streak_length()
+                    if streak >= stale_rematch_threshold:
+                        num_skipped += 1
+                        continue
+                    if len(match_history.results) >= stale_rematch_threshold:
+                        num_tossups += 1
+
+            num_matches += 1
             print(f'{match_participants[0]} vs {match_participants[1]}')
+
+    print(f'Matches to run: {num_matches}  Matches skipped: {num_skipped}  Matches to run due to mixed result: {num_tossups}')
 
 
 def list_results(working_dir: WorkingDir, odd_week: bool):
