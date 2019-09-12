@@ -7,7 +7,7 @@ release_notes = {
         - The fetch command can now fetch from different seasons. - NicEastvillage
         - Add --ignore-stale-rematches options. - tarehart
         - Added bubble sort. - tarehart
-        - Updated overlay with logo support and hides %'s. - Skyborg
+        - Updated overlay with logo support and always show the %'s. - Skyborg
         - Now hides spectator hud (by pressing h). - NicEastvillage
     ''',
     '0.4.0': '''
