@@ -8,7 +8,7 @@ Usage:
     autoleagueplay results (odd | even)
     autoleagueplay check
     autoleagueplay test
-    autoleagueplay fetch <week_num>
+    autoleagueplay fetch <season_num> <week_num>
     autoleagueplay leaderboard (odd | even)
     autoleagueplay leaderboard (clip | symbols | legend)
     autoleagueplay results-to-version-files <results_file>
@@ -112,15 +112,13 @@ def main():
             test_all_bots(working_dir)
 
         elif arguments['fetch']:
+            season = int(arguments['<season_num>'])
             week_num = int(arguments['<week_num>'])
-            if week_num < 0:
-                print(f'Week number must be a positive integer.')
-                sys.exit(1)
 
-            ladder = fetch_ladder_from_sheets(week_num)
+            ladder = fetch_ladder_from_sheets(season, week_num)
             ladder.write(working_dir.ladder)
 
-            print(f'Successfully fetched week {week_num} to \'{working_dir.ladder}\':')
+            print(f'Successfully fetched season {season} week {week_num} to \'{working_dir.ladder}\':')
             for bot in ladder.bots:
                 print(bot)
 

@@ -19,7 +19,7 @@ autoleagueplay run (odd | even) [--teamsize=T] [--replays=R]
 autoleagueplay bubble [--teamsize=T] [--replays=R]           | Runs a bubble sort.
 autoleagueplay list (odd | even)                             | Lists all matches for the next odd or even week.
 autoleagueplay results (odd | even)                          | Lists the results.
-autoleagueplay fetch <week_num>                              | Fetches the given ladder from the Google Sheets.
+autoleagueplay fetch <season_num> <week_num>                 | Fetches the given ladder from the Google Sheets.
 autoleagueplay check                                         | Checks if all bots are present in the bot folder.
 autoleagueplay test                                          | Test run all bots to see if they auto-start
 autoleagueplay leaderboard (odd | even)                      | Generate a leaderboard image.
@@ -63,7 +63,7 @@ You don't have to give them config files in the `bots/` directory. AutoLeaguePla
 If you really want to give them different names, change them [there](https://github.com/NicEastvillage/AutoLeague/blob/master/autoleagueplay/psyonix_allstar.cfg).
 
 #### Fetching ladder from Google Sheets
-You can fetch the ladder from the Google Sheets with the `autopleagueplay fetch <week_num>` command.
+You can fetch the ladder from the Google Sheets with the `autopleagueplay fetch <season_num> <week_num>` command.
 Before you can use this you must get a `credentials.json` file which you can get by enabling [Google Sheets API](https://developers.google.com/sheets/api/quickstart/python) and then download the client configurations.
 Put the `credentials.json ` in `autopleagueplay/cred/`. Next time you run the command, Google wants your permission, and then it should work.
 
