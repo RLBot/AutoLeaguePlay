@@ -20,7 +20,7 @@ from autoleagueplay.key_macros import hide_hud_macro, do_director_spectating_mac
 @dataclass
 class MercyRule:
 
-    required_goal_diff: int = 6
+    required_goal_diff: int = 7
     game_interface: GameInterface = None
 
     mercy_detected: bool = False
