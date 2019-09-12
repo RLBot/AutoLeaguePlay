@@ -9,7 +9,7 @@ from autoleagueplay.generate_matches import generate_round_robin_matches
 from autoleagueplay.ladder import Ladder
 from autoleagueplay.load_bots import load_all_bots_versioned
 from autoleagueplay.match_configurations import make_match_config
-from autoleagueplay.match_exercise import MatchExercise, MatchGrader
+from autoleagueplay.match_exercise import MatchExercise, MatchGrader, MercyRule
 from autoleagueplay.match_result import CombinedScore, MatchResult
 from autoleagueplay.overlay import OverlayData
 from autoleagueplay.paths import WorkingDir
@@ -19,18 +19,19 @@ logger = get_logger('autoleagueplay')
 
 
 def run_match(participant_1: str, participant_2: str, match_config, replay_preference: ReplayPreference) -> MatchResult:
-
-    # Play the match
-    print(f'Starting match: {participant_1} vs {participant_2}. Waiting for match to finish...')
-    match = MatchExercise(
-        name=f'{participant_1} vs {participant_2}',
-        match_config=match_config,
-        grader=MatchGrader(
-            replay_monitor=ReplayMonitor(replay_preference=replay_preference),
-        )
-    )
-
     with setup_manager_context() as setup_manager:
+
+        # Prepare the match exercise
+        print(f'Starting match: {participant_1} vs {participant_2}. Waiting for match to finish...')
+        match = MatchExercise(
+            name=f'{participant_1} vs {participant_2}',
+            match_config=match_config,
+            grader=MatchGrader(
+                mercy_rule=MercyRule(game_interface=setup_manager.game_interface),
+                replay_monitor=ReplayMonitor(replay_preference=replay_preference),
+            )
+        )
+
         # If any bots have signed up for early start, give them 10 seconds.
         # This is typically enough for Scratch.
         setup_manager.early_start_seconds = 10

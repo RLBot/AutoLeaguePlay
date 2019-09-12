@@ -25,7 +25,6 @@ Options:
     --version                    Show version.
     --skip-stale-rematches       Skip matches when the same versions of both bots have already played each other.
 """
-import datetime
 import sys
 from pathlib import Path
 
