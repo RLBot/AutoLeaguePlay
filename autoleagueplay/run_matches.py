@@ -3,9 +3,8 @@ import time
 from rlbot.setup_manager import setup_manager_context
 from rlbot.training.training import Fail
 from rlbot.utils.logging_utils import get_logger
-from rlbottraining.exercise_runner import run_playlist
+from rlbottraining.exercise_runner import run_playlist, RenderPolicy
 
-from autoleagueplay.fake_renderer import FakeRenderer
 from autoleagueplay.generate_matches import generate_round_robin_matches
 from autoleagueplay.ladder import Ladder
 from autoleagueplay.load_bots import load_all_bots_versioned
@@ -32,14 +31,12 @@ def run_match(participant_1: str, participant_2: str, match_config, replay_prefe
     )
 
     with setup_manager_context() as setup_manager:
-        # Disable rendering by replacing renderer with a renderer that does nothing
-        setup_manager.game_interface.renderer = FakeRenderer()
         # If any bots have signed up for early start, give them 10 seconds.
         # This is typically enough for Scratch.
         setup_manager.early_start_seconds = 10
 
         # For loop, but should only run exactly once
-        for exercise_result in run_playlist([match], setup_manager=setup_manager):
+        for exercise_result in run_playlist([match], setup_manager=setup_manager, render_policy=RenderPolicy.NO_TRAINING_RENDER):
 
             # Warn users if no replay was found
             if isinstance(exercise_result.grade, Fail) and exercise_result.exercise.grader.replay_monitor.replay_id == None:

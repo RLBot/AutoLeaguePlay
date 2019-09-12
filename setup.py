@@ -21,7 +21,7 @@ setuptools.setup(
     install_requires=[
         'dataclasses',
         'rlbot',
-        'rlbottraining>=0.3.0',
+        'rlbottraining>=0.5.1',
         'docopt',
         'requests',
         'watchdog',
