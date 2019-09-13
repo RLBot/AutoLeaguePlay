@@ -35,8 +35,8 @@ def generate_leaderboard(working_dir: WorkingDir, run_strategy: RunStrategy, ext
 
     # PARAMETERS FOR DRAWING:
 
-    # Divisions
-    divisions = Ladder.DIVISION_NAMES
+    # Divisions. We only have color palettes configured for a certain number of them, so enforce a limit.
+    divisions = Ladder.DIVISION_NAMES[:len(Symbols.palette)]
 
     '''
     Each division has the origin at the top left corner of their emblem.
