@@ -1,17 +1,17 @@
 from PIL import Image, ImageDraw, ImageFont
 from moviepy.editor import ImageClip
 
-from autoleagueplay.ladder import ladder_differences, Ladder
+from autoleagueplay.ladder import ladder_differences, Ladder, RunStrategy
 from autoleagueplay.leaderboard.leaderboard_paths import LeaderboardPaths
 from autoleagueplay.leaderboard.symbols import Symbols
 from autoleagueplay.paths import WorkingDir
 
 
-def generate_leaderboard(working_dir: WorkingDir, odd_week: bool, extra: bool=False, background: bool=True):
+def generate_leaderboard(working_dir: WorkingDir, run_strategy: RunStrategy, extra: bool=False, background: bool=True):
     """
     Created a leaderboard that shows differences between the old ladder and the new ladder.
     :param working_dir: The working directory
-    :param odd_week: Whether odd or even divisions played this week
+    :param run_strategy: The strategy for running the ladder that was used this week.
     :param extra: Whether to include the next 5 divisions.
     :param background: Whether to use a background for the leaderboard.
     :param make_clip: Whether to also make an mp4 clip.
@@ -29,7 +29,7 @@ def generate_leaderboard(working_dir: WorkingDir, odd_week: bool, extra: bool=Fa
     new_ladder = Ladder.read(working_dir.new_ladder)
 
     new_bots, moved_up, moved_down = ladder_differences(old_ladder, new_ladder)
-    played = old_ladder.all_playing_bots(odd_week)
+    played = old_ladder.all_playing_bots(run_strategy)
 
     # ---------------------------------------------------------------
 

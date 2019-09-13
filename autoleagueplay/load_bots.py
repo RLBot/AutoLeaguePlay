@@ -10,7 +10,7 @@ from zipfile import ZipFile
 from rlbot.parsing.bot_config_bundle import get_bot_config_bundle, BotConfigBundle
 from rlbot.parsing.directory_scanner import scan_directory_for_bot_configs
 
-from autoleagueplay.ladder import Ladder
+from autoleagueplay.ladder import Ladder, RunStrategy
 from autoleagueplay.paths import PackageFiles, WorkingDir
 from autoleagueplay.versioned_bot import VersionedBot
 
@@ -47,7 +47,7 @@ def load_psyonix_bots():
     return psyonix_allstar, psyonix_pro, psyonix_rookie
 
 
-def check_bot_folder(working_dir: WorkingDir, odd_week: Optional[bool]=None) -> bool:
+def check_bot_folder(working_dir: WorkingDir, run_strategy: Optional[RunStrategy]=None) -> bool:
     """
     Prints all bots missing from the bot folder.
     If odd_week is not None, it will filter for bots needed for the given type of week.
@@ -55,7 +55,7 @@ def check_bot_folder(working_dir: WorkingDir, odd_week: Optional[bool]=None) -> 
     """
     bots = load_all_bots(working_dir)
     ladder = Ladder.read(working_dir.ladder)
-    needed_bots = ladder.all_playing_bots(odd_week) if odd_week is not None else ladder.bots
+    needed_bots = ladder.all_playing_bots(run_strategy) if run_strategy is not None else ladder.bots
     none_missing = True
     for bot in needed_bots:
         if bot not in bots.keys():
