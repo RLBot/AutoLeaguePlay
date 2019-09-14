@@ -111,7 +111,7 @@ def frame_tick():
 
     if time.time() >= end_time:
         print('STOP')
-        obs.obs_frontend_recording_stop()
+        # obs.obs_frontend_recording_stop()
         end_time = 99999999999999999999999999999999999999
         buffer_delay = time.time() + 20
         return
@@ -135,7 +135,7 @@ def frame_tick():
             start_time = time.time() + 3
             ended = False
         if time.time() >= start_time:
-            obs.obs_frontend_recording_start()
+            # obs.obs_frontend_recording_start()
             start_time = 99999999999999999999999999999999999999
             ended = False
             return

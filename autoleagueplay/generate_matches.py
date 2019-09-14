@@ -8,6 +8,10 @@ def generate_round_robin_matches(bots: List[str]) -> List[Tuple[str, str]]:
     """
     Returns a list of pairs of bots that should play against each other for a round robin.
     """
+
+    if len(bots) < 2:
+        return []
+
     # This makes the list of matches consistent over multiple calls. E.g. the --list option will always so same order
     random.seed(bots[0] + bots[-1])
 
