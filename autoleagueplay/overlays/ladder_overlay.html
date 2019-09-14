@@ -1,0 +1,88 @@
+<!--TODO: Suggestions from Parzival:-->
+<!--Show the bots' records next to their name (wins : losses)-->
+<!--Change the background color of divisions that already played, same for ones that are scheduled-->
+<!--Add time zone abbreviation-->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script
+            src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="ladder_overlay.css"/>
+
+</head>
+<body>
+
+    <div id="ladder-div"></div>
+    <div id="message"></div>
+
+<script>
+    var ladderDiv = $('#ladder-div');
+    var messageDiv = $('#message');
+    var previousData = null;
+
+    setInterval(function() {
+        $.get('current_match.json', function(data) {
+            if (JSON.stringify(data) !== previousData) {
+
+                ladderDiv.empty();
+                for (var i = 0; i < data.division_names.length; i++) {
+
+                    if (data.division === i) {
+
+                        var divisionDiv = $('<div class="active-division"></div>');
+                        ladderDiv.append(divisionDiv);
+                        divisionDiv.append('<span class="division-header">' + data.division_names[i] + '</span>');
+
+                        for (var j = 0; j < data.division_bots.length; j++) {
+                            var bot_key = data.division_bots[j];
+                            var bot_data = data.bot_map[bot_key];
+                            var date = new Date(bot_data.updated_date * 1000).toLocaleString();
+                            var evaluating = bot_data.name === data.blue_name || bot_data.name === data.orange_name;
+                            var playing = evaluating && !data.old_match_result;
+                            var specialClass = '';
+                            if (evaluating) {
+                                specialClass += 'evaluating';
+                            }
+                            if (playing) {
+                                specialClass += ' playing';
+                            }
+                            if (data.rr_bots.indexOf(bot_key) >= 0) {
+                                specialClass += ' round-robin'
+                            }
+                            divisionDiv.append('<p class="bot ' + specialClass + '">' + bot_data.name +
+                                '<br><span class="date">' + date + '</span></p>');
+                        }
+
+                        ladderDiv.append(divisionDiv);
+                    } else {
+                        ladderDiv.append('<div class="inactive-division">' + data.division_names[i] + '</div>');
+                    }
+                }
+
+                messageDiv.empty();
+                if (data.message) {
+                    message_lines = data.message.split('\n');
+                    for (var i = 0; i < message_lines.length; i++) {
+                        var fixed_line = message_lines[i].replace(/ /g, '&nbsp;');
+                        messageDiv.append("<div>" + fixed_line + "</div>");
+                    }
+                }
+                if (data.old_match_result) {
+                    var goals = [data.old_match_result.orange_goals, data.old_match_result.blue_goals];
+                    goals.sort();
+                    goals.reverse();
+                    messageDiv.append("<p>Skipping match because we have a historical result!</p>");
+                    messageDiv.append('<p>' + data.old_match_result.winner + ' won ' + goals[0] + ' - ' + goals[1] + '</p>');
+                }
+                previousData = JSON.stringify(data);
+            }
+        });
+    }, 500);
+</script>
+
+</body>
+</html>

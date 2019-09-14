@@ -1,12 +1,37 @@
 import json
+from datetime import timedelta
 from pathlib import Path
+from typing import List
+
+from autoleagueplay.ladder import Ladder
+from autoleagueplay.match_result import MatchResult
+from autoleagueplay.versioned_bot import VersionedBot
 
 
 class OverlayData:
-    def __init__(self, division: int, blue_config_path: str, orange_config_path: str):
+    def __init__(self, division: int, blue_bot: VersionedBot, orange_bot: VersionedBot, ladder: Ladder, versioned_map,
+                 old_match_result: MatchResult, rr_bots: List[str], message: str=''):
         self.division = division
-        self.blue_config_path = blue_config_path
-        self.orange_config_path = orange_config_path
+        self.blue_config_path = blue_bot.bot_config.config_path if blue_bot is not None else None
+        self.orange_config_path = orange_bot.bot_config.config_path if orange_bot is not None else None
+        self.ladder = ladder.bots
+        self.division_names = Ladder.DIVISION_NAMES[:ladder.division_count()]
+        self.old_match_result = {
+            'winner': old_match_result.winner,
+            'blue_goals': old_match_result.blue_goals,
+            'orange_goals': old_match_result.orange_goals} if old_match_result is not None else None
+        self.division_bots = ladder.round_robin_participants(division)
+        self.rr_bots = rr_bots
+        self.blue_name = blue_bot.bot_config.name if blue_bot is not None else ''
+        self.orange_name = orange_bot.bot_config.name if orange_bot is not None else ''
+        self.message = message
+
+        self.bot_map = {}
+        for bot in ladder.bots:
+            self.bot_map[bot] = {
+                'name': versioned_map[bot].bot_config.name,
+                'updated_date': (versioned_map[bot].updated_date + timedelta(seconds=0)).timestamp(),
+            }
 
     def write(self, path: Path):
         with open(path, 'w') as f:
