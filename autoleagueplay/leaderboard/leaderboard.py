@@ -28,7 +28,7 @@ def generate_leaderboard(working_dir: WorkingDir, odd_week: bool, extra: bool=Fa
     old_ladder = Ladder.read(working_dir.ladder)
     new_ladder = Ladder.read(working_dir.new_ladder)
 
-    new_bots, moved_up, moved_down = ladder_differences(old_ladder, new_ladder)
+    new_bots, moved_up, moved_down, moved_num = ladder_differences(old_ladder, new_ladder)
     played = old_ladder.all_playing_bots(odd_week)
 
     # ---------------------------------------------------------------
@@ -136,10 +136,12 @@ def generate_leaderboard(working_dir: WorkingDir, odd_week: bool, extra: bool=Fa
             elif bot in moved_up:
                 symbol = Image.open(LeaderboardPaths.symbols / f'{div}_up.png')
                 leaderboard.paste(symbol, sym_pos, symbol)
+                draw.text(xy=sym_pos, text=f'{moved_num[4*i+ii]}', fill=(255, 255, 255), font=bot_font)
 
             elif bot in moved_down:
                 symbol = Image.open(LeaderboardPaths.symbols / f'{div}_down.png')
                 leaderboard.paste(symbol, sym_pos, symbol)
+                draw.text(xy=sym_pos, text=f'{moved_num[4*i+ii]}', fill=(255, 255, 255), font=bot_font)
 
             elif bot in played:
                 symbol = Image.open(LeaderboardPaths.symbols / f'{div}_played.png')
