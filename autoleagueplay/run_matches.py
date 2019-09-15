@@ -63,6 +63,12 @@ def run_league_play(working_dir: WorkingDir, run_strategy: RunStrategy, replay_p
     bots = load_all_bots_versioned(working_dir)
     ladder = Ladder.read(working_dir.ladder)
 
+    latest_bots = [bot for bot in bots.values() if bot.bot_config.name in ladder.bots]
+    latest_bots.sort(key=lambda b: b.updated_date, reverse=True)
+    print('Most recently updated bots:')
+    for bot in latest_bots:
+        print(f'{bot.updated_date.isoformat()} {bot.bot_config.name}')
+
     # We need the result of every match to create the next ladder. For each match in each round robin, if a result
     # exist already, it will be parsed, if it doesn't exist, it will be played.
     # When all results have been found, the new ladder can be completed and saved.
@@ -104,9 +110,9 @@ def run_league_play(working_dir: WorkingDir, run_strategy: RunStrategy, replay_p
                             div_index,
                             participant_1,
                             participant_2,
-                            new_ladder, bots, historical_result, rr_bots)
+                            new_ladder, bots, historical_result, rr_bots, rr_results)
                         overlay_data.write(working_dir.overlay_interface)
-                        time.sleep(5)  # Show the overlay for a while. Not needed for any other reason.
+                        time.sleep(8)  # Show the overlay for a while. Not needed for any other reason.
 
                     else:
                         # Let overlay know which match we are about to start
@@ -114,7 +120,7 @@ def run_league_play(working_dir: WorkingDir, run_strategy: RunStrategy, replay_p
                             div_index,
                             participant_1,
                             participant_2,
-                            new_ladder, bots, None, rr_bots)
+                            new_ladder, bots, None, rr_bots, rr_results)
 
                         overlay_data.write(working_dir.overlay_interface)
 
@@ -124,8 +130,8 @@ def run_league_play(working_dir: WorkingDir, run_strategy: RunStrategy, replay_p
                         result.write(session_result_path)
                         versioned_result_path = working_dir.get_version_specific_match_result(participant_1, participant_2)
                         result.write(versioned_result_path)
-                        print(f'Match finished {result.blue_goals}-{result.orange_goals}. Saved result as {session_result_path}'
-                              f' and also {versioned_result_path}')
+                        print(f'Match finished {result.blue_goals}-{result.orange_goals}. Saved result as '
+                              f'{session_result_path} and also {versioned_result_path}')
 
                         rr_results.append(result)
 
@@ -141,7 +147,8 @@ def run_league_play(working_dir: WorkingDir, run_strategy: RunStrategy, replay_p
                 division_result_message += f'> {score.bot:<32}: wins={score.wins:>2}, goal_diff={score.goal_diff:>3}\n'
 
             print(division_result_message)
-            overlay_data = OverlayData(div_index, None, None, new_ladder, bots, None, rr_bots, division_result_message)
+            overlay_data = OverlayData(div_index, None, None, new_ladder, bots, None, rr_bots, rr_results,
+                                       division_result_message)
             overlay_data.write(working_dir.overlay_interface)
 
             # Rearrange bots in division on the new ladder

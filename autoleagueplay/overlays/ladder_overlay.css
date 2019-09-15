@@ -76,3 +76,15 @@ div.active-division {
     font-size: 1.5em;
     text-shadow: 0 0 6px rgb(0, 0, 0)
 }
+
+.rr_record {
+    float:right;
+}
+
+.rr_win {
+    color: #a4cc98;
+}
+
+.rr_loss {
+    color: #c1846f;
+}
