@@ -349,7 +349,7 @@ def do_reset_bar():
     boost_bar([[0, 0], [0, 0]])
     set_names('Blue-Name', '')
     set_names('Orange-Name', '')
-    
+
 def get_scene_item(name):
     scenes = obs.obs_frontend_get_scenes()
     if scenes is not None:
