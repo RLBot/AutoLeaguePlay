@@ -64,6 +64,12 @@ def run_league_play(working_dir: WorkingDir, run_strategy: RunStrategy, replay_p
     bots = load_all_bots_versioned(working_dir)
     ladder = Ladder.read(working_dir.ladder)
 
+    latest_bots = [bot for bot in bots.values() if bot.bot_config.name in ladder.bots]
+    latest_bots.sort(key=lambda b: b.updated_date, reverse=True)
+    print('Most recently updated bots:')
+    for bot in latest_bots:
+        print(f'{bot.updated_date.isoformat()} {bot.bot_config.name}')
+
     # We need the result of every match to create the next ladder. For each match in each round robin, if a result
     # exist already, it will be parsed, if it doesn't exist, it will be played.
     # When all results have been found, the new ladder can be completed and saved.

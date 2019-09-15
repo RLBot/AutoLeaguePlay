@@ -244,7 +244,8 @@ def league_data():
     division = league_data['division']
     show_division(division)
     config = [league_data['blue_config_path'], league_data['orange_config_path']]
-    set_logo(config[0], config[1])
+    if config[0]:
+        set_logo(config[0], config[1])
     return config
 
 def show_division(div_num):
