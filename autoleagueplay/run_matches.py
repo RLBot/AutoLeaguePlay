@@ -40,14 +40,11 @@ def run_match(participant_1: str, participant_2: str, match_config, replay_prefe
         setup_manager.early_start_seconds = 10
 
         # For loop, but should only run exactly once
-        for exercise_result in run_playlist([match], setup_manager=setup_manager,
-                                            render_policy=RenderPolicy.NO_TRAINING_RENDER):
+        for exercise_result in run_playlist([match], setup_manager=setup_manager, render_policy=RenderPolicy.NO_TRAINING_RENDER):
 
             # Warn users if no replay was found
-            if isinstance(exercise_result.grade,
-                          Fail) and exercise_result.exercise.grader.replay_monitor.replay_id == None:
-                print(
-                    f'WARNING: No replay was found for the match \'{participant_1} vs {participant_2}\'. Is Bakkesmod injected and \'Automatically save all replays\' enabled?')
+            if isinstance(exercise_result.grade, Fail) and exercise_result.exercise.grader.replay_monitor.replay_id == None:
+                print(f'WARNING: No replay was found for the match \'{participant_1} vs {participant_2}\'. Is Bakkesmod injected and \'Automatically save all replays\' enabled?')
 
             return exercise_result.exercise.grader.match_result
 
@@ -98,8 +95,7 @@ def run_league_play(working_dir: WorkingDir, run_strategy: RunStrategy, replay_p
 
                 # Check if match has already been played during THIS session. Maybe something crashed and we had to
                 # restart autoleague, but we want to pick up where we left off.
-                session_result_path = working_dir.get_match_result(div_index, match_participants[0],
-                                                                   match_participants[1])
+                session_result_path = working_dir.get_match_result(div_index, match_participants[0], match_participants[1])
                 participant_1 = bots[match_participants[0]]
                 participant_2 = bots[match_participants[1]]
 
