@@ -2,14 +2,14 @@
 
 Usage:
     autoleagueplay setup <working_dir>
-    autoleagueplay run (odd | even) [--teamsize=T] [--replays=R] [--ignore-missing] [--autoshutdown=S] [--skip-stale-rematches]
+    autoleagueplay run (odd | even | rolling) [--teamsize=T] [--replays=R] [--ignore-missing] [--autoshutdown=S] [--stale-rematch-threshold=X] [--half-robin]
     autoleagueplay bubble [--teamsize=T] [--replays=R]
-    autoleagueplay list (odd | even)
-    autoleagueplay results (odd | even)
+    autoleagueplay list (odd | even | rolling) [--stale-rematch-threshold=X] [--half-robin]
+    autoleagueplay results (odd | even | rolling)
     autoleagueplay check
     autoleagueplay test
     autoleagueplay fetch <season_num> <week_num>
-    autoleagueplay leaderboard (odd | even)
+    autoleagueplay leaderboard (odd | even | rolling)
     autoleagueplay leaderboard (clip | symbols | legend)
     autoleagueplay results-to-version-files <results_file>
     autoleagueplay unzip
@@ -23,7 +23,8 @@ Options:
     --autoshutdown=S              Shutdown the system S seconds after autoleague ends, usefull for VMs. [default: 0]
     -h --help                    Show this screen.
     --version                    Show version.
-    --skip-stale-rematches       Skip matches when the same versions of both bots have already played each other.
+    --stale-rematch-threshold=X  Skip matches when a bot has beaten another X times in a row, and neither of them have updated their code.
+    --half-robin                 The divisions will be cut in half (with overlap) when setting up round-robins, for fewer matches.
 """
 import sys
 from pathlib import Path
@@ -31,6 +32,7 @@ from pathlib import Path
 from docopt import docopt
 
 from autoleagueplay.bubble_sort import run_bubble_sort
+from autoleagueplay.ladder import RunStrategy
 from autoleagueplay.leaderboard.leaderboard import generate_leaderboard, generate_leaderboard_clip
 from autoleagueplay.leaderboard.symbols import generate_symbols, generate_legend
 from autoleagueplay.list_matches import list_matches, list_results, parse_results_and_write_files
@@ -64,9 +66,25 @@ def main():
 
         working_dir = WorkingDir(Path(settings.working_dir_raw))
 
+        stale_rematch_threshold = 0
+        if arguments['--stale-rematch-threshold']:
+            stale_rematch_threshold = int(arguments['--stale-rematch-threshold'])
+
+        run_strategy = None
+        if arguments['odd']:
+            run_strategy = RunStrategy.ODD
+        elif arguments['even']:
+            run_strategy = RunStrategy.EVEN
+        elif arguments['rolling']:
+            run_strategy = RunStrategy.ROLLING
+
+        half_robin = False
+        if arguments['--half-robin']:
+            half_robin = True
+
         if arguments['leaderboard']:
-            if arguments['odd'] or arguments['even']:
-                generate_leaderboard(working_dir, arguments['odd'])
+            if run_strategy is not None:
+                generate_leaderboard(working_dir, run_strategy)
             elif arguments['clip']:
                 generate_leaderboard_clip(working_dir)
             elif arguments['symbols']:
@@ -80,16 +98,16 @@ def main():
 
             replay_preference = ReplayPreference(arguments['--replays'])
             team_size = int(arguments['--teamsize'])
-            odd_week = arguments['odd']
             shutdown_time = int(arguments['--autoshutdown'])
-            skip_stale = arguments['--skip-stale-rematches']
 
             if not arguments['--ignore-missing']:
-                all_present = check_bot_folder(working_dir, odd_week)
+                all_present = check_bot_folder(working_dir, run_strategy)
                 if all_present:
-                    run_league_play(working_dir, odd_week, replay_preference, team_size, shutdown_time, skip_stale)
+                    run_league_play(working_dir, run_strategy, replay_preference, team_size, shutdown_time,
+                                    stale_rematch_threshold, half_robin)
             else:
-                run_league_play(working_dir, odd_week, replay_preference, team_size, shutdown_time, skip_stale)
+                run_league_play(working_dir, run_strategy, replay_preference, team_size, shutdown_time,
+                                stale_rematch_threshold, half_robin)
 
         elif arguments['bubble']:
 
@@ -99,10 +117,10 @@ def main():
             run_bubble_sort(working_dir, team_size, replay_preference)
 
         elif arguments['list']:
-            list_matches(working_dir, arguments['odd'])
+            list_matches(working_dir, run_strategy, stale_rematch_threshold, half_robin)
 
         elif arguments['results']:
-            list_results(working_dir, arguments['odd'])
+            list_results(working_dir, run_strategy, half_robin)
 
         elif arguments['check']:
             check_bot_folder(working_dir)

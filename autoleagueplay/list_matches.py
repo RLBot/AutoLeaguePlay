@@ -2,20 +2,29 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-from autoleagueplay.generate_matches import get_playing_division_indices, generate_round_robin_matches
-from autoleagueplay.ladder import Ladder
+from autoleagueplay.generate_matches import generate_round_robin_matches
+from autoleagueplay.ladder import Ladder, RunStrategy
 from autoleagueplay.load_bots import load_all_bots_versioned
 from autoleagueplay.match_result import MatchResult, CombinedScore
 from autoleagueplay.paths import WorkingDir
+from autoleagueplay.run_matches import get_round_robin_ranges, get_stale_match_result
 
 
-def list_matches(working_dir: WorkingDir, odd_week: bool):
+def list_matches(working_dir: WorkingDir, run_strategy: RunStrategy, stale_rematch_threshold: int = 0,
+                 half_robin: bool = False):
     """
     Prints all the matches that will be run this week.
+
+    :param stale_rematch_threshold: If a bot has won this number of matches in a row against a particular opponent
+    and neither have had their code updated, we will consider it to be a stale rematch and skip future matches.
+    If 0 is passed, we will not skip anything.
+    :param half_robin: If true, we will split the division into an upper and lower round-robin, which reduces the
+    number of matches required.
     """
 
     ladder = Ladder.read(working_dir.ladder)
-    playing_division_indices = get_playing_division_indices(ladder, odd_week)
+    playing_division_indices = ladder.playing_division_indices(run_strategy)
+    bots = load_all_bots_versioned(working_dir)
 
     if len(ladder.bots) < 2:
         print(f'Not enough bots on the ladder to play any matches')
@@ -23,23 +32,51 @@ def list_matches(working_dir: WorkingDir, odd_week: bool):
 
     print(f'Matches to play:')
 
-    # The divisions play in reverse order, but we don't print them that way.
-    for div_index in playing_division_indices:
-        print(f'--- {Ladder.DIVISION_NAMES[div_index]} division ---')
+    num_matches = 0
+    num_skipped = 0
 
-        rr_bots = ladder.round_robin_participants(div_index)
-        rr_matches = generate_round_robin_matches(rr_bots)
+    # The divisions play in reverse order.
+    for div_index in playing_division_indices[::-1]:
+        division_name = Ladder.DIVISION_NAMES[div_index] if div_index < len(Ladder.DIVISION_NAMES) else div_index
+        print(f'--- {division_name} division ---')
 
-        for match_participants in rr_matches:
-            print(f'{match_participants[0]} vs {match_participants[1]}')
+        round_robin_ranges = get_round_robin_ranges(ladder, div_index, half_robin)
+
+        for start_index, end_index in round_robin_ranges:
+            rr_bots = ladder.bots[start_index:end_index + 1]
+            rr_matches = generate_round_robin_matches(rr_bots)
+
+            for match_participants in rr_matches:
+                bot1 = bots[match_participants[0]]
+                bot2 = bots[match_participants[1]]
+                stale_match_result = get_stale_match_result(bot1, bot2, stale_rematch_threshold, working_dir)
+                if stale_match_result is not None:
+                    num_skipped += 1
+                    continue
+
+                num_matches += 1
+                print(f'{match_participants[0]} vs {match_participants[1]}')
+
+    print(f'Matches to run: {num_matches}  Matches skipped: {num_skipped}')
 
 
-def list_results(working_dir: WorkingDir, odd_week: bool):
+def list_results(working_dir: WorkingDir, run_strategy: RunStrategy, half_robin: bool):
     ladder = Ladder.read(working_dir.ladder)
-    playing_division_indices = get_playing_division_indices(ladder, odd_week)
+    playing_division_indices = ladder.playing_division_indices(run_strategy)
 
     if len(ladder.bots) < 2:
         print(f'Not enough bots on the ladder to play any matches')
+        return
+
+    if run_strategy == RunStrategy.ROLLING or half_robin:
+        # The ladder was dynamic, so we can't print divisions neatly.
+        # Just print everything in one blob.
+        match_results = [MatchResult.read(path) for path in working_dir.match_results.glob('*')]
+        for result in match_results:
+            result_str = f'  (result: {result.blue_goals}-{result.orange_goals})'
+            print(f'{result.blue} vs {result.orange}{result_str}')
+
+        print_overall_scores(ladder.bots, match_results)
         return
 
     print(f'Matches to play:')
@@ -71,16 +108,21 @@ def list_results(working_dir: WorkingDir, odd_week: bool):
             if result_path.exists():
                 rr_results.append(MatchResult.read(result_path))
 
-        overall_scores = [CombinedScore.calc_score(bot, rr_results) for bot in rr_bots]
-        sorted_overall_scores = sorted(overall_scores)[::-1]
-
-        print(f'--------------------------------+------+----------+-------+-------+-------+-------+')
-        print(f'{Ladder.DIVISION_NAMES[div_index]:<32}| Wins | GoalDiff | Goals | Shots | Saves | Score |')
-        print(f'--------------------------------+------+----------+-------+-------+-------+-------+')
-        for score in sorted_overall_scores:
-            print(f'{score.bot:<32}|  {score.wins:>2}  |    {score.goal_diff:>4}  |  {score.goals:>3}  |  {score.shots:>3}  |  {score.saves:>3}  | {score.points:>5} |')
+        print_overall_scores(rr_bots, rr_results)
 
     print(f'--------------------------------+------+----------+-------+-------+-------+-------+')
+
+
+def print_overall_scores(rr_bots, rr_results, div_index: int=-1):
+    overall_scores = [CombinedScore.calc_score(bot, rr_results) for bot in rr_bots]
+    sorted_overall_scores = sorted(overall_scores)[::-1]
+    division_name = Ladder.DIVISION_NAMES[div_index] if div_index >= 0 else 'All Bots'
+    print(f'--------------------------------+------+----------+-------+-------+-------+-------+')
+    print(f'{division_name:<32}| Wins | GoalDiff | Goals | Shots | Saves | Score |')
+    print(f'--------------------------------+------+----------+-------+-------+-------+-------+')
+    for score in sorted_overall_scores:
+        print(
+            f'{score.bot:<32}|  {score.wins:>2}  |    {score.goal_diff:>4}  |  {score.goals:>3}  |  {score.shots:>3}  |  {score.saves:>3}  | {score.points:>5} |')
 
 
 def parse_results(filename):

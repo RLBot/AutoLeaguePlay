@@ -1,4 +1,5 @@
 import time
+from pathlib import Path
 
 from rlbot.setup_manager import setup_manager_context
 from rlbot.training.training import Fail
@@ -6,14 +7,16 @@ from rlbot.utils.logging_utils import get_logger
 from rlbottraining.exercise_runner import run_playlist, RenderPolicy
 
 from autoleagueplay.generate_matches import generate_round_robin_matches
-from autoleagueplay.ladder import Ladder
+from autoleagueplay.ladder import Ladder, RunStrategy
 from autoleagueplay.load_bots import load_all_bots_versioned
 from autoleagueplay.match_configurations import make_match_config
 from autoleagueplay.match_exercise import MatchExercise, MatchGrader, MercyRule
+from autoleagueplay.match_history import MatchHistory
 from autoleagueplay.match_result import CombinedScore, MatchResult
 from autoleagueplay.overlay import OverlayData
 from autoleagueplay.paths import WorkingDir
 from autoleagueplay.replays import ReplayPreference, ReplayMonitor
+from autoleagueplay.versioned_bot import VersionedBot
 
 logger = get_logger('autoleagueplay')
 
@@ -46,10 +49,16 @@ def run_match(participant_1: str, participant_2: str, match_config, replay_prefe
             return exercise_result.exercise.grader.match_result
 
 
-def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: ReplayPreference, team_size: int,
-                    shutdowntime: int, skip_stale_rematches: bool):
+def run_league_play(working_dir: WorkingDir, run_strategy: RunStrategy, replay_preference: ReplayPreference,
+                    team_size: int, shutdowntime: int, stale_rematch_threshold: int = 0, half_robin: bool = False):
     """
     Run a league play event by running round robins for half the divisions. When done, a new ladder file is created.
+
+    :param stale_rematch_threshold: If a bot has won this number of matches in a row against a particular opponent
+    and neither have had their code updated, we will consider it to be a stale rematch and skip future matches.
+    If 0 is passed, we will not skip anything.
+    :param half_robin: If true, we will split the division into an upper and lower round-robin, which reduces the
+    number of matches required.
     """
 
     bots = load_all_bots_versioned(working_dir)
@@ -63,81 +72,76 @@ def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: 
 
     # playing_division_indices contains either even or odd indices.
     # If there is only one division always play that division (division 0, quantum).
-    playing_division_indices = range(ladder.division_count())[int(odd_week) % 2::2] if ladder.division_count() > 1 else [0]
+    playing_division_indices = ladder.playing_division_indices(run_strategy)
 
     # The divisions play in reverse order, so quantum/overclocked division plays last
     for div_index in playing_division_indices[::-1]:
         print(f'Starting round robin for the {Ladder.DIVISION_NAMES[div_index]} division')
 
-        rr_bots = ladder.round_robin_participants(div_index)
-        rr_matches = generate_round_robin_matches(rr_bots)
-        rr_results = []
+        round_robin_ranges = get_round_robin_ranges(ladder, div_index, half_robin)
 
-        for match_participants in rr_matches:
+        for start_index, end_index in round_robin_ranges:
+            rr_bots = ladder.bots[start_index:end_index + 1]
+            rr_matches = generate_round_robin_matches(rr_bots)
+            rr_results = []
 
-            versioned_result_path = working_dir.get_version_specific_match_result(
-                bots[match_participants[0]], bots[match_participants[1]])
+            for match_participants in rr_matches:
 
-            # Check if match has already been play, i.e. the result file already exist
-            result_path = working_dir.get_match_result(div_index, match_participants[0], match_participants[1])
+                # Check if match has already been played during THIS session. Maybe something crashed and we had to
+                # restart autoleague, but we want to pick up where we left off.
+                session_result_path = working_dir.get_match_result(div_index, match_participants[0], match_participants[1])
+                participant_1 = bots[match_participants[0]]
+                participant_2 = bots[match_participants[1]]
 
-            if skip_stale_rematches and versioned_result_path.exists():
-                path_to_use = versioned_result_path
-            else:
-                path_to_use = result_path
+                historical_result = find_historical_result(participant_1, participant_2, session_result_path,
+                                                       stale_rematch_threshold, working_dir)
 
-            if path_to_use.exists():
-                # Found existing result
-                try:
-                    print(f'Found existing result {path_to_use.name}')
-                    result = MatchResult.read(path_to_use)
+                if historical_result is not None:
+                    rr_results.append(historical_result)
+                    # Don't write to any files at all, since this match didn't actually occur.
+
+                else:
+                    # Let overlay know which match we are about to start
+                    overlay_data = OverlayData(
+                        div_index,
+                        participant_1.bot_config.config_path,
+                        participant_2.bot_config.config_path)
+
+                    overlay_data.write(working_dir.overlay_interface)
+
+                    match_config = make_match_config(participant_1.bot_config, participant_2.bot_config, team_size)
+                    result = run_match(participant_1.bot_config.name, participant_2.bot_config.name, match_config,
+                                       replay_preference)
+                    result.write(session_result_path)
+                    versioned_result_path = working_dir.get_version_specific_match_result(participant_1, participant_2)
+                    result.write(versioned_result_path)
+                    print(f'Match finished {result.blue_goals}-{result.orange_goals}. Saved result as {session_result_path}'
+                          f' and also {versioned_result_path}')
 
                     rr_results.append(result)
 
-                except Exception as e:
-                    print(f'Error loading result {path_to_use.name}. Fix/delete the result and run script again.')
-                    raise e
+                    # Let the winner celebrate and the scoreboard show for a few seconds.
+                    # This sleep not required.
+                    time.sleep(8)
 
-            else:
-                # Let overlay know which match we are about to start
-                overlay_data = OverlayData(
-                    div_index,
-                    bots[match_participants[0]].bot_config.config_path,
-                    bots[match_participants[1]].bot_config.config_path)
+            # Find bots' overall score for the round robin
+            overall_scores = [CombinedScore.calc_score(bot, rr_results) for bot in rr_bots]
+            sorted_overall_scores = sorted(overall_scores)[::-1]
+            print(f'Bots\' overall round-robin performance ({Ladder.DIVISION_NAMES[div_index]} division):')
+            for score in sorted_overall_scores:
+                print(f'> {score.bot:<32}: wins={score.wins:>2}, goal_diff={score.goal_diff:>3}, goals={score.goals:>2}, shots={score.shots:>2}, saves={score.saves:>2}, points={score.points:>2}')
 
-                overlay_data.write(working_dir.overlay_interface)
+            # Rearrange bots in division on the new ladder
+            # TODO: previously there was an immutable old ladder and a mutable new ladder. How does that change
+            # when we're using bubble?
+            first_bot_index = start_index
+            bots_to_rearrange = len(rr_bots)
+            for i in range(bots_to_rearrange):
+                new_ladder.bots[first_bot_index + i] = sorted_overall_scores[i].bot
 
-                participant_1 = bots[match_participants[0]]
-                participant_2 = bots[match_participants[1]]
-                match_config = make_match_config(participant_1.bot_config, participant_2.bot_config, team_size)
-                result = run_match(participant_1.bot_config.name, participant_2.bot_config.name, match_config,
-                                   replay_preference)
-                result.write(result_path)
-                result.write(versioned_result_path)
-                print(f'Match finished {result.blue_goals}-{result.orange_goals}. Saved result as {result_path}'
-                      f' and also {versioned_result_path}')
-
-                rr_results.append(result)
-
-                # Let the winner celebrate and the scoreboard show for a few seconds.
-                # This sleep not required.
-                time.sleep(8)
+            event_results.append(rr_results)
 
         print(f'{Ladder.DIVISION_NAMES[div_index]} division done')
-        event_results.append(rr_results)
-
-        # Find bots' overall score for the round robin
-        overall_scores = [CombinedScore.calc_score(bot, rr_results) for bot in rr_bots]
-        sorted_overall_scores = sorted(overall_scores)[::-1]
-        print(f'Bots\' overall performance in {Ladder.DIVISION_NAMES[div_index]} division:')
-        for score in sorted_overall_scores:
-            print(f'> {score.bot:<32}: wins={score.wins:>2}, goal_diff={score.goal_diff:>3}, goals={score.goals:>2}, shots={score.shots:>2}, saves={score.saves:>2}, points={score.points:>2}')
-
-        # Rearrange bots in division on the new ladder
-        first_bot_index = new_ladder.division_size * div_index
-        bots_to_rearrange = len(rr_bots)
-        for i in range(bots_to_rearrange):
-            new_ladder.bots[first_bot_index + i] = sorted_overall_scores[i].bot
 
     # Save new ladder
     Ladder.write(new_ladder, working_dir.new_ladder)
@@ -151,3 +155,54 @@ def run_league_play(working_dir: WorkingDir, odd_week: bool, replay_preference: 
         working_dir.overlay_interface.unlink()
 
     return new_ladder
+
+
+def get_round_robin_ranges(ladder, div_index, half_robin):
+    """
+    Returns a list of tuples. Each tuple has the start index and the end index (inclusive) of some ladder slots
+    that should participate in a round robin. For example, it might return [(4, 2), (2, 0)], which means there
+    should be a round robin including slots 4, 3, 2, and another round robin including slots 2, 1, 0.
+    :param ladder: The ladder we're playing in.
+    :param div_index: The index of the division that is currently being played.
+    :param half_robin: True if we want to split this division into two round-robins so fewer matches need to be played.
+    """
+
+    if half_robin:
+        num_bots = ladder.division_size + ladder.overlap_size
+
+        # smaller indices = higher bots on the ladder
+        upper_range = (div_index * ladder.division_size, div_index * ladder.division_size + num_bots // 2)
+        lower_range = (div_index * ladder.division_size + num_bots // 2, (div_index + 1) * ladder.division_size)
+        sub_ranges = [lower_range, upper_range]
+    else:
+        sub_ranges = [(div_index * ladder.division_size, (div_index + 1) * ladder.division_size)]
+    return sub_ranges
+
+
+def find_historical_result(bot1: VersionedBot, bot2: VersionedBot, session_result_path: Path,
+                           stale_rematch_threshold: int, working_dir: WorkingDir):
+    if session_result_path.exists():
+        # Found existing result
+        try:
+            print(f'Found existing result {session_result_path.name}')
+            return MatchResult.read(session_result_path)
+
+        except Exception as e:
+            print(f'Error loading result {session_result_path.name}. Fix/delete the result and run script again.')
+            raise e
+
+    return get_stale_match_result(bot1, bot2, stale_rematch_threshold, working_dir, True)
+
+
+def get_stale_match_result(bot1: VersionedBot, bot2: VersionedBot, stale_rematch_threshold: int,
+                           working_dir: WorkingDir, print_debug: bool=False):
+    if stale_rematch_threshold > 0:
+        match_history = MatchHistory(working_dir.get_version_specific_match_files(bot1.get_key(), bot2.get_key()))
+        if not match_history.is_empty():
+            streak = match_history.get_current_streak_length()
+            if streak >= stale_rematch_threshold:
+                if print_debug:
+                    print(f'Found stale rematch between {bot1.bot_config.name} and {bot2.bot_config.name}. '
+                          f'{match_history.get_latest_result().winner} has won {streak} times in a row.')
+                return match_history.get_latest_result()
+    return None
