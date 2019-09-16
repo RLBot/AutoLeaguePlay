@@ -40,11 +40,14 @@ def run_match(participant_1: str, participant_2: str, match_config, replay_prefe
         setup_manager.early_start_seconds = 10
 
         # For loop, but should only run exactly once
-        for exercise_result in run_playlist([match], setup_manager=setup_manager, render_policy=RenderPolicy.NO_TRAINING_RENDER):
+        for exercise_result in run_playlist([match], setup_manager=setup_manager,
+                                            render_policy=RenderPolicy.NO_TRAINING_RENDER):
 
             # Warn users if no replay was found
-            if isinstance(exercise_result.grade, Fail) and exercise_result.exercise.grader.replay_monitor.replay_id == None:
-                print(f'WARNING: No replay was found for the match \'{participant_1} vs {participant_2}\'. Is Bakkesmod injected and \'Automatically save all replays\' enabled?')
+            if isinstance(exercise_result.grade,
+                          Fail) and exercise_result.exercise.grader.replay_monitor.replay_id == None:
+                print(
+                    f'WARNING: No replay was found for the match \'{participant_1} vs {participant_2}\'. Is Bakkesmod injected and \'Automatically save all replays\' enabled?')
 
             return exercise_result.exercise.grader.match_result
 
@@ -95,7 +98,8 @@ def run_league_play(working_dir: WorkingDir, run_strategy: RunStrategy, replay_p
 
                 # Check if match has already been played during THIS session. Maybe something crashed and we had to
                 # restart autoleague, but we want to pick up where we left off.
-                session_result_path = working_dir.get_match_result(div_index, match_participants[0], match_participants[1])
+                session_result_path = working_dir.get_match_result(div_index, match_participants[0],
+                                                                   match_participants[1])
                 participant_1 = bots[match_participants[0]]
                 participant_2 = bots[match_participants[1]]
 
@@ -103,25 +107,20 @@ def run_league_play(working_dir: WorkingDir, run_strategy: RunStrategy, replay_p
                     print(f'Found existing result {session_result_path.name}')
                     rr_results.append(MatchResult.read(session_result_path))
                 else:
-                    historical_result = get_stale_match_result(participant_1, participant_2, stale_rematch_threshold, working_dir, True)
+                    historical_result = get_stale_match_result(participant_1, participant_2, stale_rematch_threshold,
+                                                               working_dir, True)
                     if historical_result is not None:
                         rr_results.append(historical_result)
                         # Don't write to result files at all, since this match didn't actually occur.
-                        overlay_data = OverlayData(
-                            div_index,
-                            participant_1,
-                            participant_2,
-                            new_ladder, bots, historical_result, rr_bots, rr_results)
+                        overlay_data = OverlayData(div_index, participant_1, participant_2, new_ladder, bots,
+                                                   historical_result, rr_bots, rr_results)
                         overlay_data.write(working_dir.overlay_interface)
                         time.sleep(8)  # Show the overlay for a while. Not needed for any other reason.
 
                     else:
                         # Let overlay know which match we are about to start
-                        overlay_data = OverlayData(
-                            div_index,
-                            participant_1,
-                            participant_2,
-                            new_ladder, bots, None, rr_bots, rr_results)
+                        overlay_data = OverlayData(div_index, participant_1, participant_2, new_ladder, bots, None,
+                                                   rr_bots, rr_results)
 
                         overlay_data.write(working_dir.overlay_interface)
 
@@ -129,7 +128,8 @@ def run_league_play(working_dir: WorkingDir, run_strategy: RunStrategy, replay_p
                         result = run_match(participant_1.bot_config.name, participant_2.bot_config.name, match_config,
                                            replay_preference)
                         result.write(session_result_path)
-                        versioned_result_path = working_dir.get_version_specific_match_result(participant_1, participant_2)
+                        versioned_result_path = working_dir.get_version_specific_match_result(participant_1,
+                                                                                              participant_2)
                         result.write(versioned_result_path)
                         print(f'Match finished {result.blue_goals}-{result.orange_goals}. Saved result as '
                               f'{session_result_path} and also {versioned_result_path}')
@@ -216,7 +216,7 @@ def find_historical_result(bot1: VersionedBot, bot2: VersionedBot, session_resul
 
 
 def get_stale_match_result(bot1: VersionedBot, bot2: VersionedBot, stale_rematch_threshold: int,
-                           working_dir: WorkingDir, print_debug: bool=False):
+                           working_dir: WorkingDir, print_debug: bool = False):
     if stale_rematch_threshold > 0:
         match_history = MatchHistory(working_dir.get_version_specific_match_files(bot1.get_key(), bot2.get_key()))
         if not match_history.is_empty():
