@@ -73,7 +73,7 @@ class Ladder:
             return Ladder([line.strip() for line in f], division_size)
 
 
-def ladder_differences(old_ladder: Ladder, new_ladder: Ladder) -> Tuple[List[str], List[str], List[str]]:
+def ladder_differences(old_ladder: Ladder, new_ladder: Ladder) -> Tuple[List[str], List[str], List[str], List[int]]:
 
     # Creates lists to track which bots moved or which are new
     new_bots = []
