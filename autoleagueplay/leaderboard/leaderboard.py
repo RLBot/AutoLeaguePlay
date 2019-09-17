@@ -142,12 +142,18 @@ def generate_leaderboard(working_dir: WorkingDir, run_strategy: RunStrategy, ext
             elif bot in moved_up:
                 symbol = Image.open(LeaderboardPaths.symbols / f'{div}_up.png')
                 leaderboard.paste(symbol, sym_pos, symbol)
-                draw.text(xy=sym_desc_pos, text=f'{moved_num[4*i+ii]}', fill=sym_div_colors[Symbols.LIGHT], font=bot_font)
+                move_txt = f'{moved_num[4*i+ii]}'
+                w, h = draw.textsize(move_txt, font=bot_font)
+                draw.text(xy=(sym_desc_pos[0] - w / 2, sym_desc_pos[1]), text=move_txt,
+                          fill=sym_div_colors[Symbols.LIGHT], font=bot_font)
 
             elif bot in moved_down:
                 symbol = Image.open(LeaderboardPaths.symbols / f'{div}_down.png')
                 leaderboard.paste(symbol, sym_pos, symbol)
-                draw.text(xy=sym_desc_pos, text=f'{moved_num[4*i+ii]}', fill=sym_div_colors[Symbols.DARK], font=bot_font)
+                move_txt = f'{moved_num[4*i+ii]}'
+                w, h = draw.textsize(move_txt, font=bot_font)
+                draw.text(xy=(sym_desc_pos[0] - w / 2, sym_desc_pos[1]), text=move_txt,
+                          fill=sym_div_colors[Symbols.DARK], font=bot_font)
 
             elif bot in played:
                 symbol = Image.open(LeaderboardPaths.symbols / f'{div}_played.png')
