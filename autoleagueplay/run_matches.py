@@ -64,6 +64,12 @@ def run_league_play(working_dir: WorkingDir, run_strategy: RunStrategy, replay_p
     bots = load_all_bots_versioned(working_dir)
     ladder = Ladder.read(working_dir.ladder)
 
+    latest_bots = [bot for bot in bots.values() if bot.bot_config.name in ladder.bots]
+    latest_bots.sort(key=lambda b: b.updated_date, reverse=True)
+    print('Most recently updated bots:')
+    for bot in latest_bots:
+        print(f'{bot.updated_date.isoformat()} {bot.bot_config.name}')
+
     # We need the result of every match to create the next ladder. For each match in each round robin, if a result
     # exist already, it will be parsed, if it doesn't exist, it will be played.
     # When all results have been found, the new ladder can be completed and saved.
@@ -93,53 +99,64 @@ def run_league_play(working_dir: WorkingDir, run_strategy: RunStrategy, replay_p
                 participant_1 = bots[match_participants[0]]
                 participant_2 = bots[match_participants[1]]
 
-                historical_result = find_historical_result(participant_1, participant_2, session_result_path,
-                                                       stale_rematch_threshold, working_dir)
-
-                if historical_result is not None:
-                    rr_results.append(historical_result)
-                    # Don't write to any files at all, since this match didn't actually occur.
-
+                if session_result_path.exists():
+                    print(f'Found existing result {session_result_path.name}')
+                    rr_results.append(MatchResult.read(session_result_path))
                 else:
-                    # Let overlay know which match we are about to start
-                    overlay_data = OverlayData(
-                        div_index,
-                        participant_1.bot_config.config_path,
-                        participant_2.bot_config.config_path)
+                    historical_result = get_stale_match_result(participant_1, participant_2, stale_rematch_threshold,
+                                                               working_dir, True)
+                    if historical_result is not None:
+                        rr_results.append(historical_result)
+                        # Don't write to result files at all, since this match didn't actually occur.
+                        overlay_data = OverlayData(div_index, participant_1, participant_2, new_ladder, bots,
+                                                   historical_result, rr_bots, rr_results)
+                        overlay_data.write(working_dir.overlay_interface)
+                        time.sleep(8)  # Show the overlay for a while. Not needed for any other reason.
 
-                    overlay_data.write(working_dir.overlay_interface)
+                    else:
+                        # Let overlay know which match we are about to start
+                        overlay_data = OverlayData(div_index, participant_1, participant_2, new_ladder, bots, None,
+                                                   rr_bots, rr_results)
 
-                    match_config = make_match_config(participant_1.bot_config, participant_2.bot_config, team_size)
-                    result = run_match(participant_1.bot_config.name, participant_2.bot_config.name, match_config,
-                                       replay_preference)
-                    result.write(session_result_path)
-                    versioned_result_path = working_dir.get_version_specific_match_result(participant_1, participant_2)
-                    result.write(versioned_result_path)
-                    print(f'Match finished {result.blue_goals}-{result.orange_goals}. Saved result as {session_result_path}'
-                          f' and also {versioned_result_path}')
+                        overlay_data.write(working_dir.overlay_interface)
 
-                    rr_results.append(result)
+                        match_config = make_match_config(participant_1.bot_config, participant_2.bot_config, team_size)
+                        result = run_match(participant_1.bot_config.name, participant_2.bot_config.name, match_config,
+                                           replay_preference)
+                        result.write(session_result_path)
+                        versioned_result_path = working_dir.get_version_specific_match_result(participant_1,
+                                                                                              participant_2)
+                        result.write(versioned_result_path)
+                        print(f'Match finished {result.blue_goals}-{result.orange_goals}. Saved result as '
+                              f'{session_result_path} and also {versioned_result_path}')
 
-                    # Let the winner celebrate and the scoreboard show for a few seconds.
-                    # This sleep not required.
-                    time.sleep(8)
+                        rr_results.append(result)
+
+                        # Let the winner celebrate and the scoreboard show for a few seconds.
+                        # This sleep not required.
+                        time.sleep(8)
 
             # Find bots' overall score for the round robin
             overall_scores = [CombinedScore.calc_score(bot, rr_results) for bot in rr_bots]
             sorted_overall_scores = sorted(overall_scores)[::-1]
-            print(f'Bots\' overall round-robin performance ({Ladder.DIVISION_NAMES[div_index]} division):')
+            division_result_message = f'Bots\' overall round-robin performance ({Ladder.DIVISION_NAMES[div_index]} division):\n'
             for score in sorted_overall_scores:
-                print(f'> {score.bot:<32}: wins={score.wins:>2}, goal_diff={score.goal_diff:>3}, goals={score.goals:>2}, shots={score.shots:>2}, saves={score.saves:>2}, points={score.points:>2}')
+                division_result_message += f'> {score.bot:<32}: wins={score.wins:>2}, goal_diff={score.goal_diff:>3}\n'
+
+            print(division_result_message)
+            overlay_data = OverlayData(div_index, None, None, new_ladder, bots, None, rr_bots, rr_results,
+                                       division_result_message)
+            overlay_data.write(working_dir.overlay_interface)
 
             # Rearrange bots in division on the new ladder
-            # TODO: previously there was an immutable old ladder and a mutable new ladder. How does that change
-            # when we're using bubble?
             first_bot_index = start_index
             bots_to_rearrange = len(rr_bots)
             for i in range(bots_to_rearrange):
                 new_ladder.bots[first_bot_index + i] = sorted_overall_scores[i].bot
 
             event_results.append(rr_results)
+
+            time.sleep(8)  # Show the division overlay for a while.
 
         print(f'{Ladder.DIVISION_NAMES[div_index]} division done')
 
@@ -195,7 +212,7 @@ def find_historical_result(bot1: VersionedBot, bot2: VersionedBot, session_resul
 
 
 def get_stale_match_result(bot1: VersionedBot, bot2: VersionedBot, stale_rematch_threshold: int,
-                           working_dir: WorkingDir, print_debug: bool=False):
+                           working_dir: WorkingDir, print_debug: bool = False):
     if stale_rematch_threshold > 0:
         match_history = MatchHistory(working_dir.get_version_specific_match_files(bot1.get_key(), bot2.get_key()))
         if not match_history.is_empty():

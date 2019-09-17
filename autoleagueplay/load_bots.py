@@ -14,7 +14,7 @@ from autoleagueplay.ladder import Ladder, RunStrategy
 from autoleagueplay.paths import PackageFiles, WorkingDir
 from autoleagueplay.versioned_bot import VersionedBot
 
-DEFAULT_TIMESTAMP = datetime.utcfromtimestamp(0)
+DEFAULT_TIMESTAMP = datetime(2015, 7, 15, 0, 0, 0)  # Rocket League release date :)
 
 # Maps Psyonix bots to their skill value. Initialized in load_psyonix_bots()
 psyonix_bots_skill: Dict[str, float] = dict()

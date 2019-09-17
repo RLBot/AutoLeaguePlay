@@ -1,0 +1,118 @@
+<!--TODO: Suggestions from Parzival:-->
+<!--Change the background color of divisions that already played, same for ones that are scheduled-->
+<!--Add time zone abbreviation-->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script
+            src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="ladder_overlay.css"/>
+
+</head>
+<body>
+
+    <div id="ladder-div"></div>
+    <div id="message"></div>
+
+<script>
+    const ladderDiv = $('#ladder-div');
+    const messageDiv = $('#message');
+    let previousData = null;
+
+    function buildRoundRobinRecords(rr_results) {
+        const rr_records = {};
+        for (let i = 0; i < rr_results.length; i++) {
+            const result = rr_results[i];
+            if (!rr_records[result.winner]) {
+                rr_records[result.winner] = [];
+            }
+            rr_records[result.winner].push(true);
+
+            if (!rr_records[result.loser]) {
+                rr_records[result.loser] = [];
+            }
+            rr_records[result.loser].push(false);
+        }
+        return rr_records;
+    }
+
+    setInterval(function() {
+        $.get('current_match.json', function(data) {
+            if (JSON.stringify(data) !== previousData) {
+
+                const rr_records = buildRoundRobinRecords(data.rr_results);
+
+                ladderDiv.empty();
+                for (let i = 0; i < data.division_names.length; i++) {
+
+                    if (data.division === i) {
+
+                        const divisionDiv = $('<div class="active-division"></div>');
+                        ladderDiv.append(divisionDiv);
+                        divisionDiv.append('<span class="division-header">' + data.division_names[i] + '</span>');
+
+                        for (let j = 0; j < data.division_bots.length; j++) {
+                            const bot_key = data.division_bots[j];
+                            const bot_data = data.bot_map[bot_key];
+                            const date = new Date(bot_data.updated_date * 1000).toLocaleString();
+                            const evaluating = bot_data.name === data.blue_name || bot_data.name === data.orange_name;
+                            const playing = evaluating && !data.old_match_result;
+                            let specialClass = '';
+                            if (evaluating) {
+                                specialClass += 'evaluating';
+                            }
+                            if (playing) {
+                                specialClass += ' playing';
+                            }
+                            if (data.rr_bots.indexOf(bot_key) >= 0) {
+                                specialClass += ' round-robin'
+                            }
+                            let rr_record_markup = '';
+                            if (rr_records[bot_key]) {
+                                rr_records[bot_key].forEach((outcome) => {
+                                    rr_record_markup += outcome
+                                        ? '<span class="rr_win">🗹</span>'
+                                        : '<span class="rr_loss">🗷</span>';
+                                });
+                            }
+
+                            divisionDiv.append('<p class="bot ' + specialClass + '">'
+                                + '<span class="rr_record">' + rr_record_markup + '</span>'
+                                + bot_data.name
+                                + '<br><span class="date">' + date + '</span></p>');
+                        }
+
+                        ladderDiv.append(divisionDiv);
+                    } else {
+                        ladderDiv.append('<div class="inactive-division">' + data.division_names[i] + '</div>');
+                    }
+                }
+
+                messageDiv.empty();
+                if (data.message) {
+                    message_lines = data.message.split('\n');
+                    for (let i = 0; i < message_lines.length; i++) {
+                        const fixed_line = message_lines[i].replace(/ /g, '&nbsp;');
+                        messageDiv.append("<div>" + fixed_line + "</div>");
+                    }
+                }
+                if (data.old_match_result) {
+                    const goals = [data.old_match_result.orange_goals, data.old_match_result.blue_goals];
+                    goals.sort();
+                    goals.reverse();
+                    messageDiv.append("<p>Skipping match because we have a historical result!</p>");
+                    messageDiv.append('<p>' + data.old_match_result.winner + ' beat ' + data.old_match_result.loser +
+                        ' ' + goals[0] + ' - ' + goals[1] + '</p>');
+                }
+                previousData = JSON.stringify(data);
+            }
+        });
+    }, 500);
+</script>
+
+</body>
+</html>
