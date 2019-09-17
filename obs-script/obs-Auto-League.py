@@ -348,8 +348,7 @@ def do_reset_bar():
     boost_bar([[0, 0], [0, 0]])
     set_names('Blue-Name', '')
     set_names('Orange-Name', '')
-    set_logo(r'C:\Users\fabio\fabio\Software\Programing\RLBot\AutoLeaguePlay\autoleagueplay\bots\Skybot\Skybot\SkyBot.cfg', r'C:\Users\fabio\fabio\Software\Programing\RLBot\AutoLeaguePlay\autoleagueplay\bots\Kamael\Kamael\Kamael.cfg')
-
+    
 def get_scene_item(name):
     scenes = obs.obs_frontend_get_scenes()
     if scenes is not None:
