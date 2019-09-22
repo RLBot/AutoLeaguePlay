@@ -28,7 +28,7 @@ def generate_leaderboard(working_dir: WorkingDir, run_strategy: RunStrategy, ext
     old_ladder = Ladder.read(working_dir.ladder)
     new_ladder = Ladder.read(working_dir.new_ladder)
 
-    new_bots, moved_up, moved_down = ladder_differences(old_ladder, new_ladder)
+    new_bots, moved_up, moved_down, moved_num = ladder_differences(old_ladder, new_ladder)
     played = old_ladder.all_playing_bots(run_strategy)
 
     # ---------------------------------------------------------------
@@ -62,11 +62,15 @@ def generate_leaderboard(working_dir: WorkingDir, run_strategy: RunStrategy, ext
 
     # Bot name offsets from the division name position.
     bot_x_offset = 200
-    bot_y_offset = 300
+    bot_y_offset = 292
 
     # Offsets for the symbols from the bot name position.
-    sym_x_offset = 1295
+    sym_x_offset = 1300
     sym_y_offset = 5
+
+    # Offsets for the symbols' description from the bot name position.
+    sym_desc_x_offset = 1220
+    sym_desc_y_offset = 0
 
     # Incremenets for x and y.
     div_x_incr = 1790
@@ -127,6 +131,8 @@ def generate_leaderboard(working_dir: WorkingDir, run_strategy: RunStrategy, ext
 
             # Calculates symbol position.
             sym_pos = (bot_pos[0] + sym_x_offset, bot_pos[1] + sym_y_offset)
+            sym_desc_pos = (bot_pos[0] + sym_desc_x_offset, bot_pos[1] + sym_desc_y_offset)
+            sym_div_colors = Symbols.palette[div]
 
             # Pastes appropriate symbol
             if bot in new_bots:
@@ -136,10 +142,18 @@ def generate_leaderboard(working_dir: WorkingDir, run_strategy: RunStrategy, ext
             elif bot in moved_up:
                 symbol = Image.open(LeaderboardPaths.symbols / f'{div}_up.png')
                 leaderboard.paste(symbol, sym_pos, symbol)
+                move_txt = f'{moved_num[4*i+ii]}'
+                w, h = draw.textsize(move_txt, font=bot_font)
+                draw.text(xy=(sym_desc_pos[0] - w / 2, sym_desc_pos[1]), text=move_txt,
+                          fill=sym_div_colors[Symbols.LIGHT], font=bot_font)
 
             elif bot in moved_down:
                 symbol = Image.open(LeaderboardPaths.symbols / f'{div}_down.png')
                 leaderboard.paste(symbol, sym_pos, symbol)
+                move_txt = f'{moved_num[4*i+ii]}'
+                w, h = draw.textsize(move_txt, font=bot_font)
+                draw.text(xy=(sym_desc_pos[0] - w / 2, sym_desc_pos[1]), text=move_txt,
+                          fill=sym_div_colors[Symbols.DARK], font=bot_font)
 
             elif bot in played:
                 symbol = Image.open(LeaderboardPaths.symbols / f'{div}_played.png')

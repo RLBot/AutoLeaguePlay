@@ -73,12 +73,13 @@ class Ladder:
             return Ladder([line.strip() for line in f], division_size)
 
 
-def ladder_differences(old_ladder: Ladder, new_ladder: Ladder) -> Tuple[List[str], List[str], List[str]]:
+def ladder_differences(old_ladder: Ladder, new_ladder: Ladder) -> Tuple[List[str], List[str], List[str], List[int]]:
 
     # Creates lists to track which bots moved or which are new
     new_bots = []
     moved_up = []
     moved_down = []
+    moved_num = []
 
     # Loops through each bot to find differences
     for bot in new_ladder.bots:
@@ -90,7 +91,11 @@ def ladder_differences(old_ladder: Ladder, new_ladder: Ladder) -> Tuple[List[str
             # Finds whether the bot moved and whether up or down
             if new_ladder.bots.index(bot) < old_ladder.bots.index(bot):
                 moved_up.append(bot)
+
             elif new_ladder.bots.index(bot) > old_ladder.bots.index(bot):
                 moved_down.append(bot)
+            
+            # Finds out how much the moved
+            moved_num.append(abs(old_ladder.bots.index(bot) - new_ladder.bots.index(bot)))
 
-    return new_bots, moved_up, moved_down
+    return new_bots, moved_up, moved_down, moved_num

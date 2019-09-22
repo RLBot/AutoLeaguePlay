@@ -8,7 +8,7 @@ from autoleagueplay.leaderboard.leaderboard_paths import LeaderboardPaths
 from autoleagueplay.paths import WorkingDir
 
 class Symbols:
-    symbols = {
+    templates = {
         # Symbol: (Image, description)
         'new': (Image.open(LeaderboardPaths.templates / 'new.png'), 'New bot'),
         'up': (Image.open(LeaderboardPaths.templates / 'up.png'), 'Rank up'),
@@ -32,22 +32,26 @@ class Symbols:
         'Ferranti': ((200, 200, 200), (98, 98, 98), (56, 56, 56))
     }
 
+    LIGHT = 0
+    NORMAL = 1
+    DARK = 2
+
 
 def generate_symbols():
     """Creates symbols"""
     palette = Symbols.palette
-    symbols = Symbols.symbols
+    templates = Symbols.templates
     for div in palette:
         # TODO Do this with numpy to preserve alpha
 
         # Makes new images which are all one colour.
-        light = palette[div][0]
-        normal = palette[div][1]
-        dark = palette[div][2]
+        light = palette[div][Symbols.LIGHT]
+        normal = palette[div][Symbols.NORMAL]
+        dark = palette[div][Symbols.DARK]
 
-        for symbol in symbols:
+        for symbol in templates:
             # Changes symbol to numpy array containing RGBA for every pixel.
-            data = np.array(symbols[symbol][0].convert('RGBA'))
+            data = np.array(templates[symbol][0].convert('RGBA'))
 
             # Seperating RGBA for clarity.
             red, green, blue, alpha = data.T
@@ -75,16 +79,16 @@ def generate_symbols():
 
 def generate_legend(working_dir: WorkingDir):
     """Creates legend."""
-    symbols = Symbols.symbols
+    templates = Symbols.templates
     legend = Image.new('RGB', (500, 400), (0, 0, 0))
     draw = ImageDraw.Draw(legend)
     font_type = ImageFont.truetype(str(LeaderboardPaths.font_regular), 32)
 
     # Pastes symbol template and draws help text.
-    for i, symbol in enumerate(symbols):
+    for i, symbol in enumerate(templates):
         pos = (10, 100 * i + 10)
-        legend.paste(symbols[symbol][0], pos, symbols[symbol][0])
-        draw.text(xy=(110, 100 * i + 30), text=symbols[symbol][1], fill=(255, 255, 255), font=font_type)
+        legend.paste(templates[symbol][0], pos, templates[symbol][0])
+        draw.text(xy=(110, 100 * i + 30), text=templates[symbol][1], fill=(255, 255, 255), font=font_type)
 
     # Saves legend to file.
     legend.save(working_dir.leaderboard_legend, 'PNG')
