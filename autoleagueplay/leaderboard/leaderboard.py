@@ -28,8 +28,11 @@ def generate_leaderboard(working_dir: WorkingDir, run_strategy: RunStrategy, ext
     old_ladder = Ladder.read(working_dir.ladder)
     new_ladder = Ladder.read(working_dir.new_ladder)
 
-    new_bots, moved_up, moved_down, moved_num = ladder_differences(old_ladder, new_ladder)
+    new_bots, ranks_moved = ladder_differences(old_ladder, new_ladder)
     played = old_ladder.all_playing_bots(run_strategy)
+
+    if len(new_ladder.bots) > 40:
+        print(f'WARNING: The ladder contains more than 40 bots. Display five extra divisions using the option --extra.')
 
     # ---------------------------------------------------------------
 
@@ -139,25 +142,23 @@ def generate_leaderboard(working_dir: WorkingDir, run_strategy: RunStrategy, ext
                 symbol = Image.open(LeaderboardPaths.symbols / f'{div}_new.png')
                 leaderboard.paste(symbol, sym_pos, symbol)
 
-            elif bot in moved_up:
-                symbol = Image.open(LeaderboardPaths.symbols / f'{div}_up.png')
-                leaderboard.paste(symbol, sym_pos, symbol)
-                move_txt = f'{moved_num[4*i+ii]}'
-                w, h = draw.textsize(move_txt, font=bot_font)
-                draw.text(xy=(sym_desc_pos[0] - w / 2, sym_desc_pos[1]), text=move_txt,
-                          fill=sym_div_colors[Symbols.LIGHT], font=bot_font)
-
-            elif bot in moved_down:
-                symbol = Image.open(LeaderboardPaths.symbols / f'{div}_down.png')
-                leaderboard.paste(symbol, sym_pos, symbol)
-                move_txt = f'{moved_num[4*i+ii]}'
-                w, h = draw.textsize(move_txt, font=bot_font)
-                draw.text(xy=(sym_desc_pos[0] - w / 2, sym_desc_pos[1]), text=move_txt,
-                          fill=sym_div_colors[Symbols.DARK], font=bot_font)
-
             elif bot in played:
-                symbol = Image.open(LeaderboardPaths.symbols / f'{div}_played.png')
+
+                # Insert symbol to show rank movement
+                if ranks_moved[bot] > 0:
+                    symbol = Image.open(LeaderboardPaths.symbols / f'{div}_up.png')
+                elif ranks_moved[bot] < 0:
+                    symbol = Image.open(LeaderboardPaths.symbols / f'{div}_down.png')
+                else:
+                    symbol = Image.open(LeaderboardPaths.symbols / f'{div}_played.png')
                 leaderboard.paste(symbol, sym_pos, symbol)
+
+                if ranks_moved[bot] != 0:
+                    move_txt = f'{abs(ranks_moved[bot])}'
+                    w, h = draw.textsize(move_txt, font=bot_font)
+                    color = sym_div_colors[Symbols.DARK if ranks_moved[bot] < 0 else Symbols.LIGHT]
+                    draw.text(xy=(sym_desc_pos[0] - w / 2, sym_desc_pos[1]), text=move_txt,
+                              fill=color, font=bot_font)
 
     # Saves the image.
     leaderboard.save(working_dir.leaderboard, 'PNG')

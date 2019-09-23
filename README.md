@@ -28,7 +28,7 @@ autoleagueplay results (odd | even | rolling)                | Lists the results
 autoleagueplay fetch <season_num> <week_num>                 | Fetches the given ladder from the Google Sheets.
 autoleagueplay check                                         | Checks if all bots are present in the bot folder.
 autoleagueplay test                                          | Test run all bots to see if they auto-start
-autoleagueplay leaderboard (odd | even | rolling)            | Generate a leaderboard image.
+autoleagueplay leaderboard (odd | even | rolling) [--extra]  | Generate a leaderboard image.
 autoleagueplay leaderboard (clip | symbols | legend)         | Generate a clip or legend for the leaderboard, or update symbols.
 autoleagueplay results-to-version-files <results_file>       | Generates match result files by parsing the output of the results command.
 autoleagueplay unzip                                         | Unzips all the zip files in the bot folder.
@@ -38,15 +38,16 @@ autoleagueplay --version                                     | Show version.
 
 Options:
 ```
+-h --help                    Show this screen.
+--version                    Show version.
 --replays=R                  What to do with the replays of the match. Valid values are 'save', and 'calculated_gg'. [default: calculated_gg]
 --list                       Instead of playing the matches, the list of matches is printed.
 --results                    Like --list but also shows the result of matches that has been played.
 --ignore-missing             Allow the script to run even though not all bots are in the bot directory.
 --skip-stale-rematches       Skip matches when the same versions of both bots have already played each other.
--h --help                    Show this screen.
---version                    Show version.
 --stale-rematch-threshold=X  Skip matches when a bot has beaten another X times in a row, and neither of them have updated their code.
 --half-robin                 The divisions will be cut in half (with overlap) when setting up round-robins, for fewer matches.
+--extra                      Display five extra divisions on the leaderboard. Useful when bot count is greater than 40.
 ```
 
 The working directory contains:

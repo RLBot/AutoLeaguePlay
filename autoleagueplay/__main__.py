@@ -9,7 +9,7 @@ Usage:
     autoleagueplay check
     autoleagueplay test
     autoleagueplay fetch <season_num> <week_num>
-    autoleagueplay leaderboard (odd | even | rolling)
+    autoleagueplay leaderboard (odd | even | rolling) [--extra]
     autoleagueplay leaderboard (clip | symbols | legend)
     autoleagueplay results-to-version-files <results_file>
     autoleagueplay unzip
@@ -84,7 +84,7 @@ def main():
 
         if arguments['leaderboard']:
             if run_strategy is not None:
-                generate_leaderboard(working_dir, run_strategy)
+                generate_leaderboard(working_dir, run_strategy, arguments['--extra'])
             elif arguments['clip']:
                 generate_leaderboard_clip(working_dir)
             elif arguments['symbols']:

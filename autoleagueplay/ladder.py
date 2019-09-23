@@ -1,7 +1,7 @@
 import math
 from enum import Enum
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Mapping
 
 
 class RunStrategy(Enum):
@@ -54,6 +54,8 @@ class Ladder:
         """
         Returns a list of all bots that will play.
         """
+        if run_strategy == RunStrategy.ROLLING:
+            return self.bots.copy()
         playing = []
         playing_division_indices = self.playing_division_indices(run_strategy)
         for div_index in playing_division_indices:
@@ -73,29 +75,20 @@ class Ladder:
             return Ladder([line.strip() for line in f], division_size)
 
 
-def ladder_differences(old_ladder: Ladder, new_ladder: Ladder) -> Tuple[List[str], List[str], List[str], List[int]]:
+def ladder_differences(old_ladder: Ladder, new_ladder: Ladder) -> Tuple[List[str], Mapping[str, int]]:
+    """
+    Returns a list of new bots and a dictionary with bot movements on the ladder. If a bot moved up the number in
+    the dictionary will be positive, if it moved down, it will be negative.
+    """
 
-    # Creates lists to track which bots moved or which are new
     new_bots = []
-    moved_up = []
-    moved_down = []
-    moved_num = []
+    ranks_moved = {}
 
-    # Loops through each bot to find differences
     for bot in new_ladder.bots:
-        # Finds if the bot is new
         if bot not in old_ladder.bots:
             new_bots.append(bot)
-
         else:
-            # Finds whether the bot moved and whether up or down
-            if new_ladder.bots.index(bot) < old_ladder.bots.index(bot):
-                moved_up.append(bot)
+            # Finds out how much the bot moved. Positive numbers means it moved up and negative numbers means down
+            ranks_moved[bot] = (old_ladder.bots.index(bot) - new_ladder.bots.index(bot))
 
-            elif new_ladder.bots.index(bot) > old_ladder.bots.index(bot):
-                moved_down.append(bot)
-            
-            # Finds out how much the moved
-            moved_num.append(abs(old_ladder.bots.index(bot) - new_ladder.bots.index(bot)))
-
-    return new_bots, moved_up, moved_down, moved_num
+    return new_bots, ranks_moved
