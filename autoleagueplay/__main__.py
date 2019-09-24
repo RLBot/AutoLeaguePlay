@@ -9,7 +9,7 @@ Usage:
     autoleagueplay check
     autoleagueplay test
     autoleagueplay fetch <season_num> <week_num>
-    autoleagueplay leaderboard (odd | even | rolling) [--extra]
+    autoleagueplay leaderboard (odd | even | rolling) [--top-only]
     autoleagueplay leaderboard (clip | symbols | legend)
     autoleagueplay results-to-version-files <results_file>
     autoleagueplay unzip
@@ -25,6 +25,7 @@ Options:
     --version                    Show version.
     --stale-rematch-threshold=X  Skip matches when a bot has beaten another X times in a row, and neither of them have updated their code.
     --half-robin                 The divisions will be cut in half (with overlap) when setting up round-robins, for fewer matches.
+    --top-only                   Only display top 40 bots on the leaderboard even though there might be more bots.
 """
 import sys
 from pathlib import Path
@@ -84,7 +85,7 @@ def main():
 
         if arguments['leaderboard']:
             if run_strategy is not None:
-                generate_leaderboard(working_dir, run_strategy, arguments['--extra'])
+                generate_leaderboard(working_dir, run_strategy, not arguments['--top-only'])
             elif arguments['clip']:
                 generate_leaderboard_clip(working_dir)
             elif arguments['symbols']:

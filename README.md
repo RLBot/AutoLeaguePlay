@@ -47,7 +47,7 @@ Options:
 --skip-stale-rematches       Skip matches when the same versions of both bots have already played each other.
 --stale-rematch-threshold=X  Skip matches when a bot has beaten another X times in a row, and neither of them have updated their code.
 --half-robin                 The divisions will be cut in half (with overlap) when setting up round-robins, for fewer matches.
---extra                      Display five extra divisions on the leaderboard. Useful when bot count is greater than 40.
+--top-only                   Only display top 40 bots on the leaderboard even though there might be more bots.
 ```
 
 The working directory contains:

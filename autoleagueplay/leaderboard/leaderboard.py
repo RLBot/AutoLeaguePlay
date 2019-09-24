@@ -7,7 +7,7 @@ from autoleagueplay.leaderboard.symbols import Symbols
 from autoleagueplay.paths import WorkingDir
 
 
-def generate_leaderboard(working_dir: WorkingDir, run_strategy: RunStrategy, extra: bool=False, background: bool=True):
+def generate_leaderboard(working_dir: WorkingDir, run_strategy: RunStrategy, allow_extra: bool=True, background: bool=True):
     """
     Created a leaderboard that shows differences between the old ladder and the new ladder.
     :param working_dir: The working directory
@@ -31,15 +31,14 @@ def generate_leaderboard(working_dir: WorkingDir, run_strategy: RunStrategy, ext
     new_bots, ranks_moved = ladder_differences(old_ladder, new_ladder)
     played = old_ladder.all_playing_bots(run_strategy)
 
-    if len(new_ladder.bots) > 40:
-        print(f'WARNING: The ladder contains more than 40 bots. Display five extra divisions using the option --extra.')
-
     # ---------------------------------------------------------------
 
     # PARAMETERS FOR DRAWING:
 
     # Divisions. We only have color palettes configured for a certain number of them, so enforce a limit.
     divisions = Ladder.DIVISION_NAMES[:len(Symbols.palette)]
+
+    extra = (allow_extra and len(new_ladder.bots) > 40)
 
     '''
     Each division has the origin at the top left corner of their emblem.
