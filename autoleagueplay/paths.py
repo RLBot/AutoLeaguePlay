@@ -38,6 +38,7 @@ class WorkingDir:
         self.ladder = self._working_dir / 'ladder.txt'
         self.new_ladder = self._working_dir / 'ladder_new.txt'
         self.match_results = self._working_dir / f'results'
+        self.results_overview = self._working_dir / f'results_overview.txt'
         self.versioned_results = self._working_dir / f'versioned_results'
         self.bots = working_dir / 'bots'
         self.overlay_interface = working_dir / 'current_match.json'
