@@ -1,7 +1,13 @@
-import json
 import math
+from enum import Enum
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Mapping
+
+
+class RunStrategy(Enum):
+    EVEN = 1
+    ODD = 2
+    ROLLING = 3
 
 
 class Ladder:
@@ -30,19 +36,28 @@ class Ladder:
         """
         return self.bots[division_index * self.division_size:(1 + division_index) * self.division_size + self.overlap_size]
 
-    def playing_division_indices(self, odd_week: bool) -> List[int]:
+    def playing_division_indices(self, run_strategy: RunStrategy) -> range:
         """
         Resulting list contains either even or odd indices. However, if there is only one division, that division will
          always (division 0, quantum).
         """
-        return range(self.division_count())[int(odd_week) % 2::2] if self.division_count() > 1 else [0]
+        if self.division_count() <= 1:
+            return range(self.division_count())
+        if run_strategy == RunStrategy.EVEN:
+            return range(0, self.division_count(), 2)
+        if run_strategy == RunStrategy.ODD:
+            return range(1, self.division_count(), 2)
+        if run_strategy == RunStrategy.ROLLING:
+            return range(self.division_count())
 
-    def all_playing_bots(self, odd_week: bool) -> List[str]:
+    def all_playing_bots(self, run_strategy: RunStrategy) -> List[str]:
         """
         Returns a list of all bots that will play.
         """
+        if run_strategy == RunStrategy.ROLLING:
+            return self.bots.copy()
         playing = []
-        playing_division_indices = self.playing_division_indices(odd_week)
+        playing_division_indices = self.playing_division_indices(run_strategy)
         for div_index in playing_division_indices:
             playing += self.round_robin_participants(div_index)
         return playing
@@ -53,31 +68,27 @@ class Ladder:
                 f.write(f'{bot}\n')
 
     @staticmethod
-    def read(path: Path) -> 'Ladder':
+    def read(path: Path, division_size: int=4) -> 'Ladder':
         if not path.is_file():
             raise ValueError('Provided path is not a file.')
         with open(path, 'r') as f:
-            return Ladder([line.strip() for line in f])
+            return Ladder([line.strip() for line in f], division_size)
 
 
-def ladder_differences(old_ladder: Ladder, new_ladder: Ladder) -> Tuple[List[str], List[str], List[str]]:
+def ladder_differences(old_ladder: Ladder, new_ladder: Ladder) -> Tuple[List[str], Mapping[str, int]]:
+    """
+    Returns a list of new bots and a dictionary with bot movements on the ladder. If a bot moved up the number in
+    the dictionary will be positive, if it moved down, it will be negative.
+    """
 
-    # Creates lists to track which bots moved or which are new
     new_bots = []
-    moved_up = []
-    moved_down = []
+    ranks_moved = {}
 
-    # Loops through each bot to find differences
     for bot in new_ladder.bots:
-        # Finds if the bot is new
         if bot not in old_ladder.bots:
             new_bots.append(bot)
-
         else:
-            # Finds whether the bot moved and whether up or down
-            if new_ladder.bots.index(bot) < old_ladder.bots.index(bot):
-                moved_up.append(bot)
-            elif new_ladder.bots.index(bot) > old_ladder.bots.index(bot):
-                moved_down.append(bot)
+            # Finds out how much the bot moved. Positive numbers means it moved up and negative numbers means down
+            ranks_moved[bot] = (old_ladder.bots.index(bot) - new_ladder.bots.index(bot))
 
-    return new_bots, moved_up, moved_down
+    return new_bots, ranks_moved

@@ -1,10 +1,13 @@
 # https://stackoverflow.com/questions/458550/standard-way-to-embed-version-into-python-package
 
-__version__ = '0.3.1'
+__version__ = '0.5.1'
 
 release_notes = {
-    '0.5.0': '''
+    '0.5.2': '''
+        - The fetch command can now fetch from different seasons. - NicEastvillage
+        - Add --ignore-stale-rematches options. - tarehart
         - Added bubble sort. - tarehart
+        - Updated overlay with logo support and always show the %'s. - Skyborg
         - Now hides spectator hud (by pressing h). - NicEastvillage
     ''',
     '0.4.0': '''

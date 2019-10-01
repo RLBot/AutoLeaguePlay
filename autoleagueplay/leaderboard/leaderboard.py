@@ -1,17 +1,17 @@
 from PIL import Image, ImageDraw, ImageFont
 from moviepy.editor import ImageClip
 
-from autoleagueplay.ladder import ladder_differences, Ladder
+from autoleagueplay.ladder import ladder_differences, Ladder, RunStrategy
 from autoleagueplay.leaderboard.leaderboard_paths import LeaderboardPaths
 from autoleagueplay.leaderboard.symbols import Symbols
 from autoleagueplay.paths import WorkingDir
 
 
-def generate_leaderboard(working_dir: WorkingDir, odd_week: bool, extra: bool=False, background: bool=True):
+def generate_leaderboard(working_dir: WorkingDir, run_strategy: RunStrategy, allow_extra: bool=True, background: bool=True):
     """
     Created a leaderboard that shows differences between the old ladder and the new ladder.
     :param working_dir: The working directory
-    :param odd_week: Whether odd or even divisions played this week
+    :param run_strategy: The strategy for running the ladder that was used this week.
     :param extra: Whether to include the next 5 divisions.
     :param background: Whether to use a background for the leaderboard.
     :param make_clip: Whether to also make an mp4 clip.
@@ -28,15 +28,17 @@ def generate_leaderboard(working_dir: WorkingDir, odd_week: bool, extra: bool=Fa
     old_ladder = Ladder.read(working_dir.ladder)
     new_ladder = Ladder.read(working_dir.new_ladder)
 
-    new_bots, moved_up, moved_down = ladder_differences(old_ladder, new_ladder)
-    played = old_ladder.all_playing_bots(odd_week)
+    new_bots, ranks_moved = ladder_differences(old_ladder, new_ladder)
+    played = old_ladder.all_playing_bots(run_strategy)
 
     # ---------------------------------------------------------------
 
     # PARAMETERS FOR DRAWING:
 
-    # Divisions
-    divisions = Ladder.DIVISION_NAMES
+    # Divisions. We only have color palettes configured for a certain number of them, so enforce a limit.
+    divisions = Ladder.DIVISION_NAMES[:len(Symbols.palette)]
+
+    extra = (allow_extra and len(new_ladder.bots) > 40)
 
     '''
     Each division has the origin at the top left corner of their emblem.
@@ -62,11 +64,15 @@ def generate_leaderboard(working_dir: WorkingDir, odd_week: bool, extra: bool=Fa
 
     # Bot name offsets from the division name position.
     bot_x_offset = 200
-    bot_y_offset = 300
+    bot_y_offset = 292
 
     # Offsets for the symbols from the bot name position.
-    sym_x_offset = 1295
+    sym_x_offset = 1300
     sym_y_offset = 5
+
+    # Offsets for the symbols' description from the bot name position.
+    sym_desc_x_offset = 1220
+    sym_desc_y_offset = 0
 
     # Incremenets for x and y.
     div_x_incr = 1790
@@ -127,23 +133,31 @@ def generate_leaderboard(working_dir: WorkingDir, odd_week: bool, extra: bool=Fa
 
             # Calculates symbol position.
             sym_pos = (bot_pos[0] + sym_x_offset, bot_pos[1] + sym_y_offset)
+            sym_desc_pos = (bot_pos[0] + sym_desc_x_offset, bot_pos[1] + sym_desc_y_offset)
+            sym_div_colors = Symbols.palette[div]
 
             # Pastes appropriate symbol
             if bot in new_bots:
                 symbol = Image.open(LeaderboardPaths.symbols / f'{div}_new.png')
                 leaderboard.paste(symbol, sym_pos, symbol)
 
-            elif bot in moved_up:
-                symbol = Image.open(LeaderboardPaths.symbols / f'{div}_up.png')
-                leaderboard.paste(symbol, sym_pos, symbol)
-
-            elif bot in moved_down:
-                symbol = Image.open(LeaderboardPaths.symbols / f'{div}_down.png')
-                leaderboard.paste(symbol, sym_pos, symbol)
-
             elif bot in played:
-                symbol = Image.open(LeaderboardPaths.symbols / f'{div}_played.png')
+
+                # Insert symbol to show rank movement
+                if ranks_moved[bot] > 0:
+                    symbol = Image.open(LeaderboardPaths.symbols / f'{div}_up.png')
+                elif ranks_moved[bot] < 0:
+                    symbol = Image.open(LeaderboardPaths.symbols / f'{div}_down.png')
+                else:
+                    symbol = Image.open(LeaderboardPaths.symbols / f'{div}_played.png')
                 leaderboard.paste(symbol, sym_pos, symbol)
+
+                if ranks_moved[bot] != 0:
+                    move_txt = f'{abs(ranks_moved[bot])}'
+                    w, h = draw.textsize(move_txt, font=bot_font)
+                    color = sym_div_colors[Symbols.DARK if ranks_moved[bot] < 0 else Symbols.LIGHT]
+                    draw.text(xy=(sym_desc_pos[0] - w / 2, sym_desc_pos[1]), text=move_txt,
+                              fill=color, font=bot_font)
 
     # Saves the image.
     leaderboard.save(working_dir.leaderboard, 'PNG')

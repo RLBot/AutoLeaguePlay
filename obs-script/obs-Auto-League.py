@@ -245,7 +245,8 @@ def league_data():
     division = league_data['division']
     show_division(division)
     config = [league_data['blue_config_path'], league_data['orange_config_path']]
-    set_logo(config[0], config[1])
+    if config[0]:
+        set_logo(config[0], config[1])
     return config
 
 def show_division(div_num):
@@ -369,7 +370,6 @@ def do_reset_bar():
     boost_bar([[0, 0], [0, 0]])
     set_names('Blue-Name', '')
     set_names('Orange-Name', '')
-    set_logo(r'C:\Users\fabio\fabio\Software\Programing\RLBot\AutoLeaguePlay\autoleagueplay\bots\Skybot\Skybot\SkyBot.cfg', r'C:\Users\fabio\fabio\Software\Programing\RLBot\AutoLeaguePlay\autoleagueplay\bots\Kamael\Kamael\Kamael.cfg')
 
 def get_scene_item(name):
     scenes = obs.obs_frontend_get_scenes()

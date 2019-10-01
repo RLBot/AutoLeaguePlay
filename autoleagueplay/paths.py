@@ -16,13 +16,15 @@
 """
 This module contains file system paths that are used by autoleagueplay.
 """
+from datetime import datetime
 from pathlib import Path
-from typing import Mapping
+from typing import Mapping, List
 
 from rlbot.parsing.bot_config_bundle import BotConfigBundle
 from rlbot.parsing.directory_scanner import scan_directory_for_bot_configs
 
 from autoleagueplay.ladder import Ladder
+from autoleagueplay.match_history import MatchHistory
 from autoleagueplay.versioned_bot import VersionedBot
 
 
@@ -36,6 +38,7 @@ class WorkingDir:
         self.ladder = self._working_dir / 'ladder.txt'
         self.new_ladder = self._working_dir / 'ladder_new.txt'
         self.match_results = self._working_dir / f'results'
+        self.versioned_results = self._working_dir / f'versioned_results'
         self.bots = working_dir / 'bots'
         self.overlay_interface = working_dir / 'current_match.json'
         self.leaderboard = working_dir / 'leaderboard.png'
@@ -45,6 +48,7 @@ class WorkingDir:
     def _ensure_directory_structure(self):
         self.ladder.touch(exist_ok=True)
         self.match_results.mkdir(exist_ok=True)
+        self.versioned_results.mkdir(exist_ok=True)
         self.bots.mkdir(exist_ok=True)
 
     def get_match_result(self, division_index: int, blue: str, orange: str) -> Path:
@@ -52,10 +56,28 @@ class WorkingDir:
         return self.match_results / match_name
 
     def get_version_specific_match_result(self, bot1: VersionedBot, bot2: VersionedBot) -> Path:
-        bot_keys = [bot1.get_key(), bot2.get_key()]
-        bot_keys.sort()
-        match_name = f'{bot_keys[0]}_vs_{bot_keys[1]}.json'
-        return self.match_results / match_name
+        return self._get_version_specific_match_result_from_keys(bot1.get_key(), bot2.get_key())
+
+    def get_version_specific_match_result_from_times(
+            self, name1: str, updated_date1: datetime, name2: str, updated_date2: datetime) -> Path:
+
+        return self._get_version_specific_match_result_from_keys(
+            VersionedBot.create_key(name1, updated_date1),
+            VersionedBot.create_key(name2, updated_date2))
+
+    def _get_version_specific_match_result_from_keys(self, key1: str, key2: str):
+        match_name = MatchHistory.make_result_file_name(key1, key2, datetime.now())
+        return self.versioned_results / match_name
+
+    def get_version_specific_match_files(self, key1: str, key2: str) -> List[Path]:
+        """
+        Returns the match history between these two specific bot versions. The list of match results will be
+        returned with the most recent match appearing first.
+        """
+        prefix = MatchHistory.make_result_file_prefix(key1, key2)
+        files = list(self.versioned_results.glob(f'{prefix}*'))
+        files.sort(reverse=True)
+        return files
 
     def get_bots(self) -> Mapping[str, BotConfigBundle]:
         return {
