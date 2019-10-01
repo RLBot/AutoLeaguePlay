@@ -266,9 +266,7 @@ def set_logo(blue_config, orange_config): #reused for logo later
     orange_logo = orange_config_bun.get_logo_file()
     if orange_logo is None:
         orange_logo = default_logo
-    blue_logo = r"C:\Users\fabio\fabio\Software\Programing\RLBot\AutoLeaguePlay\autoleagueplay\bots\Skybot\Skybot\logo.png"  # default_logo
-    orange_logo = r"C:/Users/fabio/fabio/Software/Programing/RLBot/AutoLeaguePlay/autoleagueplay/bots/Botimus Prime 2/logo.png"#default_logo
-
+        
     default_logo_scale = 0.25
     default_logo_size = [400*default_logo_scale, 300*default_logo_scale]
 
