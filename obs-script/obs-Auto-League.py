@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 import psutil
 import ctypes
+from PIL import Image
 
 from rlbot.utils import rate_limiter
 from rlbot.utils.logging_utils import get_logger
@@ -264,6 +265,16 @@ def set_logo(blue_config, orange_config): #reused for logo later
     orange_logo = orange_config_bun.get_logo_file()
     if orange_logo is None:
         orange_logo = default_logo
+    blue_logo = r"C:\Users\fabio\fabio\Software\Programing\RLBot\AutoLeaguePlay\autoleagueplay\bots\Skybot\Skybot\logo.png"  # default_logo
+    orange_logo = r"C:/Users/fabio/fabio/Software/Programing/RLBot/AutoLeaguePlay/autoleagueplay/bots/Botimus Prime 2/logo.png"#default_logo
+
+    default_logo_scale = 0.25
+    default_logo_size = [400*default_logo_scale, 300*default_logo_scale]
+
+    blue_logo_size = list(Image.open(blue_logo).size)
+    blue_scale = default_logo_size[0]/blue_logo_size[0]
+    orange_logo_size = list(Image.open(orange_logo).size)
+    orange_scale = default_logo_size[0]/orange_logo_size[0]
 
     scenes = obs.obs_frontend_get_scenes()
     if scenes is not None:
@@ -280,12 +291,22 @@ def set_logo(blue_config, orange_config): #reused for logo later
                             obs.obs_data_set_string(settings, "file", blue_logo)
                             obs.obs_source_update(source, settings)
                             obs.obs_data_release(settings)
+
+                            vec = obs.vec2()
+                            obs.vec2_set(vec, blue_scale, blue_scale)
+                            obs.obs_sceneitem_set_scale(item, vec)
+
                         if obs.obs_source_get_name(source_t) == "Logo-1":
                             source = source_t
                             settings = obs.obs_data_create()
                             obs.obs_data_set_string(settings, "file", orange_logo)
                             obs.obs_source_update(source, settings)
                             obs.obs_data_release(settings)
+
+                            vec = obs.vec2()
+                            obs.vec2_set(vec, orange_scale, orange_scale)
+                            obs.obs_sceneitem_set_scale(item, vec)
+
                 obs.source_list_release(scenes)
                 obs.sceneitem_list_release(items)
 
@@ -371,7 +392,7 @@ def get_scene_item(name):
 
 
 def set_text_pos():
-    pos = [290, 14]
+    pos = [290+100, 14]
     hardcoded_width = 250
     scale = [1.5, 1.5]
 
@@ -454,21 +475,21 @@ def auto_setup(props, prop): # Todo: add BO3 and BO5
         obs.obs_source_release(social_source)
         # obs.obs_sceneitem_release(social_item)
 
-        # Blue-Boost-0
-        temp_settings = get_settings('Blue Boost 0')
-        blue_boost_0_source = obs.obs_source_create('color_source', 'Blue-Boost-0', temp_settings, None)
-        blue_boost_0_item = obs.obs_scene_add(main_scene, blue_boost_0_source)
-        obs.obs_data_release(temp_settings)
-        obs.obs_source_release(blue_boost_0_source)
-        # obs.obs_sceneitem_release(blue_boost_item)
-
-        # Orange-Boost-0
-        temp_settings = get_settings('Orange Boost 0')
-        orange_boost_0_source = obs.obs_source_create('color_source', 'Orange-Boost-0', temp_settings, None)
-        orange_boost_0_item = obs.obs_scene_add(main_scene, orange_boost_0_source)
-        obs.obs_data_release(temp_settings)
-        obs.obs_source_release(orange_boost_0_source)
-        # obs.obs_sceneitem_release(orange_boost_item)
+        # # Blue-Boost-0
+        # temp_settings = get_settings('Blue Boost 0')
+        # blue_boost_0_source = obs.obs_source_create('color_source', 'Blue-Boost-0', temp_settings, None)
+        # blue_boost_0_item = obs.obs_scene_add(main_scene, blue_boost_0_source)
+        # obs.obs_data_release(temp_settings)
+        # obs.obs_source_release(blue_boost_0_source)
+        # # obs.obs_sceneitem_release(blue_boost_item)
+        #
+        # # Orange-Boost-0
+        # temp_settings = get_settings('Orange Boost 0')
+        # orange_boost_0_source = obs.obs_source_create('color_source', 'Orange-Boost-0', temp_settings, None)
+        # orange_boost_0_item = obs.obs_scene_add(main_scene, orange_boost_0_source)
+        # obs.obs_data_release(temp_settings)
+        # obs.obs_source_release(orange_boost_0_source)
+        # # obs.obs_sceneitem_release(orange_boost_item)
 
         # RLBot Overlay
         temp_settings = get_settings('RLBot Overlay')
@@ -496,6 +517,9 @@ def auto_setup(props, prop): # Todo: add BO3 and BO5
         obs.obs_source_release(orange_name_source)
         # obs.obs_sceneitem_release(orange_name_item)
 
+        logo_pos = [300, 10]
+        logo_scale = 0.25
+
         # Logo-0
         temp_settings = get_settings('Logo')
         temp_path = os.path.join(files_path, 'logo.png')
@@ -505,9 +529,9 @@ def auto_setup(props, prop): # Todo: add BO3 and BO5
         obs.obs_data_release(temp_settings)
         obs.obs_source_release(logo_0_source)
         vec = obs.vec2()
-        obs.vec2_set(vec, 663, 10)
+        obs.vec2_set(vec, logo_pos[0], logo_pos[1])
         obs.obs_sceneitem_set_pos(logo_0_item, vec)
-        obs.vec2_set(vec, 0.25, 0.25)
+        obs.vec2_set(vec, logo_scale, logo_scale)
         obs.obs_sceneitem_set_scale(logo_0_item, vec)
         # obs.obs_sceneitem_release(social_item)
 
@@ -520,9 +544,9 @@ def auto_setup(props, prop): # Todo: add BO3 and BO5
         obs.obs_data_release(temp_settings)
         obs.obs_source_release(logo_0_source)
         vec = obs.vec2()
-        obs.vec2_set(vec, 1920-100-663, 10)
+        obs.vec2_set(vec, 1920-100-logo_pos[0], logo_pos[1])
         obs.obs_sceneitem_set_pos(logo_0_item, vec)
-        obs.vec2_set(vec, 0.25, 0.25)
+        obs.vec2_set(vec, logo_scale, logo_scale)
         obs.obs_sceneitem_set_scale(logo_0_item, vec)
         # obs.obs_sceneitem_release(social_item)
 
@@ -540,6 +564,7 @@ def auto_setup(props, prop): # Todo: add BO3 and BO5
         set_text_pos()
         do_reset_bar()
     else:
+
         print('Scene already exists, please delete or rename RLBot scene before continuing')
 
 # ----------------------------------------------------------
