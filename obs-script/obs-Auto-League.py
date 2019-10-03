@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 import psutil
 import ctypes
+from PIL import Image
 
 from rlbot.utils import rate_limiter
 from rlbot.utils.logging_utils import get_logger
@@ -109,10 +110,9 @@ def frame_tick():
             print('League has not started yet')
             return
 
-    if time.time() >= end_time:
-        print('STOP')
+    if time.time() >= end_time and auto_record:
         obs.obs_frontend_recording_stop()
-        end_time = 99999999999999999999999999999999999999
+        end_time = 999999999999999
         buffer_delay = time.time() + 20
         return
 
@@ -125,18 +125,18 @@ def frame_tick():
         set_names('Blue-Name', '')
         set_names('Orange-Name', '')
         prev_total_goals = 0
-        if obs.obs_frontend_recording_active() and end_time == 99999999999999999999999999999999999999 and not ended:
+        if obs.obs_frontend_recording_active() and end_time == 999999999999999 and not ended and auto_record:
             end_time = time.time() + end_delay
         ended = True
         return
     else:
-        if not obs.obs_frontend_recording_active() and start_time == 99999999999999999999999999999999999999:
+        if not obs.obs_frontend_recording_active() and start_time == 999999999999999 and auto_record:
             #Todo: add start match delay around 3 seconds
             start_time = time.time() + 3
             ended = False
-        if time.time() >= start_time:
+        if time.time() >= start_time and auto_record:
             obs.obs_frontend_recording_start()
-            start_time = 99999999999999999999999999999999999999
+            start_time = 999999999999999
             ended = False
             return
     ended = False
@@ -223,7 +223,7 @@ def frame_tick():
         goal_time = time.time() + delay
 
     if time.time() >= goal_time:
-        goal_time = 99999999999999999999999999999999999999
+        goal_time = 999999999999999
         toggle(True)
 
     if kickoff:
@@ -246,6 +246,7 @@ def league_data():
     config = [league_data['blue_config_path'], league_data['orange_config_path']]
     if config[0]:
         set_logo(config[0], config[1])
+        set_dev_name(config[0], config[1])
     return config
 
 def show_division(div_num):
@@ -266,6 +267,14 @@ def set_logo(blue_config, orange_config): #reused for logo later
     if orange_logo is None:
         orange_logo = default_logo
 
+    default_logo_scale = 0.25
+    default_logo_size = [400*default_logo_scale, 300*default_logo_scale]
+
+    blue_logo_size = list(Image.open(blue_logo).size)
+    blue_scale = default_logo_size[0]/blue_logo_size[0]
+    orange_logo_size = list(Image.open(orange_logo).size)
+    orange_scale = default_logo_size[0]/orange_logo_size[0]
+
     scenes = obs.obs_frontend_get_scenes()
     if scenes is not None:
         for scene in scenes:
@@ -281,16 +290,42 @@ def set_logo(blue_config, orange_config): #reused for logo later
                             obs.obs_data_set_string(settings, "file", blue_logo)
                             obs.obs_source_update(source, settings)
                             obs.obs_data_release(settings)
+
+                            vec = obs.vec2()
+                            obs.vec2_set(vec, blue_scale, blue_scale)
+                            obs.obs_sceneitem_set_scale(item, vec)
+
                         if obs.obs_source_get_name(source_t) == "Logo-1":
                             source = source_t
                             settings = obs.obs_data_create()
                             obs.obs_data_set_string(settings, "file", orange_logo)
                             obs.obs_source_update(source, settings)
                             obs.obs_data_release(settings)
+
+                            vec = obs.vec2()
+                            obs.vec2_set(vec, orange_scale, orange_scale)
+                            obs.obs_sceneitem_set_scale(item, vec)
+
                 obs.source_list_release(scenes)
                 obs.sceneitem_list_release(items)
 
-def set_names(name, string):
+def set_dev_name(blue_config, orange_config): #reused for logo later
+    default_dev_name = ''
+
+    blue_config_bun = get_bot_config_bundle(blue_config)
+    orange_config_bun = get_bot_config_bundle(orange_config)
+
+    blue_dev_name = blue_config_bun.base_agent_config.get('Details', 'developer')
+    if blue_dev_name is None:
+        blue_dev_name = default_dev_name
+    orange_dev_name = orange_config_bun.base_agent_config.get('Details', 'developer')
+    if orange_dev_name is None:
+        orange_dev_name = default_dev_name
+
+    set_names('Blue-Dev-Name', blue_dev_name)
+    set_names('Orange-Dev-Name', orange_dev_name)
+
+def set_names(source_name, string):
     scenes = obs.obs_frontend_get_scenes()
     if scenes is not None:
         for scene in scenes:
@@ -300,7 +335,7 @@ def set_names(name, string):
                 for item in items:
                     if item is not None:
                         source_t = obs.obs_sceneitem_get_source(item)
-                        if obs.obs_source_get_name(source_t) == name:
+                        if obs.obs_source_get_name(source_t) == source_name:
                             source = source_t
                             settings = obs.obs_data_create()
                             obs.obs_data_set_string(settings, "text", str(string))
@@ -371,9 +406,12 @@ def get_scene_item(name):
 
 
 def set_text_pos():
-    pos = [300, 14]
+    pos = [290+100, 14]
     hardcoded_width = 250
+    hardcoded_height = 26
     scale = [1.5, 1.5]
+    #math should make it mirrored but doesnt, gotta add a bit more so looks mirrored
+    bit_to_right = 5
 
     sceneItem = get_scene_item('Blue-Name')
     pos_vec = obs.vec2()
@@ -387,7 +425,26 @@ def set_text_pos():
 
     sceneItem = get_scene_item('Orange-Name')
     pos_vec = obs.vec2()
-    obs.vec2_set(pos_vec, 1920-pos[0]-hardcoded_width*scale[0], pos[1])
+    obs.vec2_set(pos_vec, 1920-pos[0]-hardcoded_width*scale[0] + bit_to_right, pos[1])
+    obs.obs_sceneitem_set_pos(sceneItem, pos_vec)
+    scale2_vec = obs.vec2()
+    obs.vec2_set(scale2_vec, scale[0], scale[1])
+    obs.obs_sceneitem_set_scale(sceneItem, scale2_vec)
+    # obs.obs_sceneitem_release(sceneItem)
+
+    sceneItem = get_scene_item('Blue-Dev-Name')
+    pos_vec = obs.vec2()
+    obs.vec2_set(pos_vec, pos[0], pos[1]+hardcoded_height*scale[1])
+    obs.obs_sceneitem_set_pos(sceneItem, pos_vec)
+    obs.obs_sceneitem_get_scale(sceneItem, pos_vec)
+    scale2_vec = obs.vec2()
+    obs.vec2_set(scale2_vec, scale[0], scale[1])
+    obs.obs_sceneitem_set_scale(sceneItem, scale2_vec)
+    # obs.obs_sceneitem_release(sceneItem)
+
+    sceneItem = get_scene_item('Orange-Dev-Name')
+    pos_vec = obs.vec2()
+    obs.vec2_set(pos_vec, 1920-pos[0]-hardcoded_width*scale[0] + bit_to_right, pos[1]+hardcoded_height*scale[1])
     obs.obs_sceneitem_set_pos(sceneItem, pos_vec)
     scale2_vec = obs.vec2()
     obs.vec2_set(scale2_vec, scale[0], scale[1])
@@ -413,6 +470,8 @@ def auto_setup(props, prop): # Todo: add BO3 and BO5
     global bar_1_item
     global blue_name_item
     global orange_name_item
+    global blue_dev_name_item
+    global orange_dev_name_item
     global blue_boost_item
     global orange_boost_item
     global boost_0_item
@@ -454,22 +513,6 @@ def auto_setup(props, prop): # Todo: add BO3 and BO5
         obs.obs_source_release(social_source)
         # obs.obs_sceneitem_release(social_item)
 
-        # Blue-Boost-0
-        temp_settings = get_settings('Blue Boost 0')
-        blue_boost_0_source = obs.obs_source_create('color_source', 'Blue-Boost-0', temp_settings, None)
-        blue_boost_0_item = obs.obs_scene_add(main_scene, blue_boost_0_source)
-        obs.obs_data_release(temp_settings)
-        obs.obs_source_release(blue_boost_0_source)
-        # obs.obs_sceneitem_release(blue_boost_item)
-
-        # Orange-Boost-0
-        temp_settings = get_settings('Orange Boost 0')
-        orange_boost_0_source = obs.obs_source_create('color_source', 'Orange-Boost-0', temp_settings, None)
-        orange_boost_0_item = obs.obs_scene_add(main_scene, orange_boost_0_source)
-        obs.obs_data_release(temp_settings)
-        obs.obs_source_release(orange_boost_0_source)
-        # obs.obs_sceneitem_release(orange_boost_item)
-
         # RLBot Overlay
         temp_settings = get_settings('RLBot Overlay')
         temp_path = os.path.join(files_path, 'overlay.png')
@@ -496,6 +539,25 @@ def auto_setup(props, prop): # Todo: add BO3 and BO5
         obs.obs_source_release(orange_name_source)
         # obs.obs_sceneitem_release(orange_name_item)
 
+        # Blue-Dev-Name
+        temp_settings = get_settings('Blue Dev Name')
+        blue_dev_name_source = obs.obs_source_create('text_gdiplus', 'Blue-Dev-Name', temp_settings, None)
+        blue_dev_name_item = obs.obs_scene_add(main_scene, blue_dev_name_source)
+        obs.obs_data_release(temp_settings)
+        obs.obs_source_release(blue_dev_name_source)
+        # obs.obs_sceneitem_release(blue_name_item)
+
+        # Orange-Dev-Name
+        temp_settings = get_settings('Orange Dev Name')
+        orange_dev_name_source = obs.obs_source_create('text_gdiplus', 'Orange-Dev-Name', temp_settings, None)
+        orange_dev_name_item = obs.obs_scene_add(main_scene, orange_dev_name_source)
+        obs.obs_data_release(temp_settings)
+        obs.obs_source_release(orange_dev_name_source)
+        # obs.obs_sceneitem_release(orange_name_item)
+
+        logo_pos = [300, 10]
+        logo_scale = 0.25
+
         # Logo-0
         temp_settings = get_settings('Logo')
         temp_path = os.path.join(files_path, 'logo.png')
@@ -505,9 +567,9 @@ def auto_setup(props, prop): # Todo: add BO3 and BO5
         obs.obs_data_release(temp_settings)
         obs.obs_source_release(logo_0_source)
         vec = obs.vec2()
-        obs.vec2_set(vec, 663, 10)
+        obs.vec2_set(vec, logo_pos[0], logo_pos[1])
         obs.obs_sceneitem_set_pos(logo_0_item, vec)
-        obs.vec2_set(vec, 0.25, 0.25)
+        obs.vec2_set(vec, logo_scale, logo_scale)
         obs.obs_sceneitem_set_scale(logo_0_item, vec)
         # obs.obs_sceneitem_release(social_item)
 
@@ -520,9 +582,9 @@ def auto_setup(props, prop): # Todo: add BO3 and BO5
         obs.obs_data_release(temp_settings)
         obs.obs_source_release(logo_0_source)
         vec = obs.vec2()
-        obs.vec2_set(vec, 1920-100-663, 10)
+        obs.vec2_set(vec, 1920-100-logo_pos[0], logo_pos[1])
         obs.obs_sceneitem_set_pos(logo_0_item, vec)
-        obs.vec2_set(vec, 0.25, 0.25)
+        obs.vec2_set(vec, logo_scale, logo_scale)
         obs.obs_sceneitem_set_scale(logo_0_item, vec)
         # obs.obs_sceneitem_release(social_item)
 
@@ -540,6 +602,7 @@ def auto_setup(props, prop): # Todo: add BO3 and BO5
         set_text_pos()
         do_reset_bar()
     else:
+
         print('Scene already exists, please delete or rename RLBot scene before continuing')
 
 # ----------------------------------------------------------
@@ -565,6 +628,7 @@ def script_properties():
     obs.obs_properties_add_button(props, "reset_button", "Reset Bar", reset_bar)
 
     obs.obs_properties_add_button(props, "setup_button", "Setup", auto_setup)
+    obs.obs_properties_add_bool(props, "auto_record", "Auto Record")
 
     #scriptpath = script_path()
 
@@ -582,6 +646,7 @@ def script_description():
 def script_update(settings):
     global delay
     global end_delay
+    global auto_record
     global files_path
     global league_folder
     global league_file
@@ -592,6 +657,7 @@ def script_update(settings):
 
     delay = obs.obs_data_get_double(settings, "delay")
     end_delay = obs.obs_data_get_double(settings, "end_delay")
+    auto_record = obs.obs_data_get_bool(settings, "auto_record")
 
 
 def CheckRunning(processName):
@@ -654,9 +720,9 @@ def start():
         own_goals = 0
         bot_list = [[[], [], [], []], [[], [], [], []]]
         # bot_list = [[bot_n][team][name][goals][owngoals]][[][][][]]]
-        goal_time = 99999999999999999999999999999999999999
-        end_time = 99999999999999999999999999999999999999
-        start_time = 99999999999999999999999999999999999999
+        goal_time = 999999999999999
+        end_time = 999999999999999
+        start_time = 999999999999999
         total_blue = 0
         total_orange = 0
         boost = [[0, 0], [0, 0]]

@@ -3,12 +3,12 @@
     "chatlog": false,
     "extents": true,
     "extents_cx": 250,
-    "extents_cy": 45,
+    "extents_cy": 30,
     "extents_wrap": true,
     "font": {
         "face": "Arial",
         "flags": 0,
-        "size": 40,
+        "size": 24,
         "style": "Regular"
     },
     "opacity": 100,
