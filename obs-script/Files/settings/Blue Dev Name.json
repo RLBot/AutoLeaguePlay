@@ -1,0 +1,18 @@
+{
+    "align": "right",
+    "chatlog": false,
+    "extents": true,
+    "extents_cx": 250,
+    "extents_cy": 20,
+    "extents_wrap": true,
+    "font": {
+        "face": "Arial",
+        "flags": 0,
+        "size": 16,
+        "style": "Regular"
+    },
+    "opacity": 100,
+    "outline": false,
+    "text": "",
+    "valign": "center"
+}
