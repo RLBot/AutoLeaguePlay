@@ -1,10 +1,17 @@
 # OBS script for AutoLeaguePlay
 
-Instructions from Skyborg:
+Instructions:
 
-> before anything, set your obs settings. like record folder, video settings, etc
+> Work around "On windows, currently only Python 3.6 is supported" https://obsproject.com/docs/scripting.html by installing a compatible Python version; do not add it to path.
 >
-> open obs. Go to tools -> scripts
+> install dependencies of obs-script into that python installation.
+> `%AppData%\..\Local\Programs\Python\Python36\scripts\pip install -r obs-script\requirements.txt`
+>
+> Install/open OBS.
+>
+> set your obs settings. like record folder, video settings, etc
+>
+> Go to tools -> scripts
 >
 > on python setting, set the path to your python installation (must be py3.6)
 >
