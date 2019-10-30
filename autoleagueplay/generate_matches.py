@@ -28,8 +28,4 @@ def generate_round_robin_matches(bots: List[str]) -> List[Tuple[str, str]]:
 def get_playing_division_indices(ladder: Ladder, odd_week: bool) -> List[int]:
     # Result is a list containing either even or odd indices.
     # If there is only one division always play that division (division 0, quantum).
-    return (
-        range(ladder.division_count())[int(odd_week) % 2 :: 2]
-        if ladder.division_count() > 1
-        else [0]
-    )
+    return range(ladder.division_count())[int(odd_week) % 2::2] if ladder.division_count() > 1 else [0]

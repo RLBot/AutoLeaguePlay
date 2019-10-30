@@ -26,9 +26,9 @@ class FailDueToNoMovement(Fail):
 
     def __repr__(self):
         if self.other_bot is not None:
-            return f"FAIL: Both {self.bot} AND {self.other_bot} did not move during test match."
+            return f'FAIL: Both {self.bot} AND {self.other_bot} did not move during test match.'
         else:
-            return f"FAIL: {self.bot} did not move during test match."
+            return f'FAIL: {self.bot} did not move during test match.'
 
 
 @dataclass
@@ -53,28 +53,18 @@ class AliveGrader(Grader):
         else:
             # Compare y location to check if bots have moved
             blue_new_loc_y = packet.game_cars[0].physics.location.y
-            self.blue_moved = (
-                self.blue_moved or abs(self.blue_first_loc_y - blue_new_loc_y) > 5
-            )
+            self.blue_moved = self.blue_moved or abs(self.blue_first_loc_y - blue_new_loc_y) > 5
             orange_new_loc_y = packet.game_cars[1].physics.location.y
-            self.orange_moved = (
-                self.orange_moved or abs(self.orange_first_loc_y - orange_new_loc_y) > 5
-            )
+            self.orange_moved = self.orange_moved or abs(self.orange_first_loc_y - orange_new_loc_y) > 5
 
         # Both bots have moved!
-        if (
-            time.time() - self.first_packet_time > self.test_min_time
-            and self.blue_moved
-            and self.orange_moved
-        ):
+        if time.time() - self.first_packet_time > self.test_min_time and self.blue_moved and self.orange_moved:
             return Pass()
 
         # Check if time is up. If so fail test
         if time.time() - self.first_packet_time > self.test_total_time:
             if not self.blue_moved and not self.orange_moved:
-                return FailDueToNoMovement(
-                    packet.game_cars[0].name, packet.game_cars[1].name
-                )
+                return FailDueToNoMovement(packet.game_cars[0].name, packet.game_cars[1].name)
             if not self.blue_moved:
                 return FailDueToNoMovement(packet.game_cars[0].name)
             else:
@@ -83,16 +73,14 @@ class AliveGrader(Grader):
         return None
 
 
-def run_test_match(
-    participant_1: str, participant_2: str, match_config
-) -> Optional[Grade]:
+def run_test_match(participant_1: str, participant_2: str, match_config) -> Optional[Grade]:
 
     # Play the match
-    print(f"Starting test match: {participant_1} vs {participant_2}...")
+    print(f'Starting test match: {participant_1} vs {participant_2}...')
     match = MatchExercise(
-        name=f"{participant_1} vs {participant_2}",
+        name=f'{participant_1} vs {participant_2}',
         match_config=match_config,
-        grader=AliveGrader(),
+        grader=AliveGrader()
     )
 
     with setup_manager_context() as setup_manager:
@@ -116,9 +104,7 @@ def test_all_bots(working_dir: WorkingDir):
     bots = load_all_bots(working_dir)
 
     # Pair each bot for a match. If there's an odd amount of bots, the last bot plays against the first bot
-    pairs = [
-        (ladder.bots[2 * i], ladder.bots[2 * i + 1]) for i in range(bot_count // 2)
-    ]
+    pairs = [(ladder.bots[2*i], ladder.bots[2*i + 1]) for i in range(bot_count // 2)]
     if bot_count % 2 == 1:
         pairs.append((ladder.bots[0], ladder.bots[-1]))
 
@@ -136,9 +122,9 @@ def test_all_bots(working_dir: WorkingDir):
     time.sleep(2)
 
     # Print summary
-    print(f"All test matches have been played ({len(pairs)} in total). Summary:")
+    print(f'All test matches have been played ({len(pairs)} in total). Summary:')
     if len(fails) == 0:
-        print(f"All bots seem to work!")
+        print(f'All bots seem to work!')
     else:
         for fail in fails:
             print(fail)

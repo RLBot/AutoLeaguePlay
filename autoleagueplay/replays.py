@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Dict, Any
-import shutil
 import os
 import RattletrapPython.rattletrap as rat
 import json
@@ -131,8 +130,6 @@ class ReplayMonitor(Metric):
             self.observer.stop()
             self.observer.join(1)
 
-    def anonymize_replay(self):
-        pass
 
 def get_replay_dir() -> Path:
     replay_dir = Path.home() / 'documents' / 'My Games' / 'Rocket League' / 'TAGame' / 'Demos'

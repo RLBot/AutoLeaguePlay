@@ -1,51 +1,49 @@
 # https://stackoverflow.com/questions/458550/standard-way-to-embed-version-into-python-package
 
-__version__ = "0.5.1"
+__version__ = '0.5.1'
 
 release_notes = {
-    "0.5.2": """
+    '0.5.2': '''
         - The fetch command can now fetch from different seasons. - NicEastvillage
         - Add --ignore-stale-rematches options. - tarehart
         - Added bubble sort. - tarehart
         - Updated overlay with logo support and always show the %'s. - Skyborg
         - Now hides spectator hud (by pressing h). - NicEastvillage
-    """,
-    "0.4.0": """
+    ''',
+    '0.4.0': '''
         - Added leaderboard command to generate leaderboard image and clip. - Calculated_Will & NicEastvillage
         - Now requires all bots are present by default. Use --ignore-missing to start anyway. - NicEastvillage
         - Added a test command to test run all bots. - NicEastvillage
         - The --results option now prints a nice table as well. - NicEastvillage
-    """,
-    "0.3.1": """
+    ''',
+    '0.3.1': '''
         - Working directory is now set once with a command. - NicEastvillage
         - Added a fetch command that fetches a ladder from Google Sheets. - naturevoidcode & NicEastvillage
         - Added a test command and option that checks for missing bots. - NicEastvillage
-    """,
-    "0.2.1": """
+    ''',
+    '0.2.1': '''
         - Added a --list and --results option to show matches that will be played and their results - NicEastvillage
         - Now places info about current match in a `current_match.json` which can be used for overlays - NicEastvillage 
-    """,
-    "0.1.0": """
+    ''',
+    '0.1.0': '''
         - Modified DomNomNom's AutoLeague script to run League Play matches # NicEastvillage
-    """,
+    '''
 }
 
 
 def get_current_release_notes():
     if __version__ in release_notes:
         return release_notes[__version__]
-    return ""
+    return ''
 
 
 def get_help_text():
-    return (
-        "Trouble? Ask on Discord at https://discord.gg/5cNbXgG "
-        "or report an issue at https://github.com/RLBot/RLBotTraining/issues"
-    )
+    return 'Trouble? Ask on Discord at https://discord.gg/5cNbXgG ' \
+           'or report an issue at https://github.com/RLBot/RLBotTraining/issues'
 
 
 def print_current_release_notes():
-    print(f"Version {__version__}")
+    print(f'Version {__version__}')
     print(get_current_release_notes())
     print(get_help_text())
-    print("")
+    print('')

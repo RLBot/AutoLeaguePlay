@@ -22,12 +22,9 @@ class SortStepOutcome:
 
 
 class BubbleSorter:
-    def __init__(
-        self,
-        working_dir: WorkingDir,
-        team_size: int,
-        replay_preference: ReplayPreference,
-    ):
+
+    def __init__(self, working_dir: WorkingDir, team_size: int,
+                 replay_preference: ReplayPreference):
         self.ladder = Ladder.read(working_dir.ladder)
         self.working_dir = working_dir
         self.team_size = team_size
@@ -48,7 +45,7 @@ class BubbleSorter:
     def gather_versioned_bots(self):
         git_root = self.working_dir._working_dir
 
-        subprocess.call(["git", "pull"], cwd=git_root)
+        subprocess.call(['git', 'pull'], cwd=git_root)
 
         self.versioned_bots_by_name = load_all_bots_versioned(self.working_dir)
 
@@ -57,9 +54,7 @@ class BubbleSorter:
             for vb in self.versioned_bots_by_name.values()
         }
 
-        bots_available = set(
-            [vb.get_unversioned_key() for vb in self.versioned_bots_by_name.values()]
-        )
+        bots_available = set([vb.get_unversioned_key() for vb in self.versioned_bots_by_name.values()])
         incoming_bots = bots_available.difference(set(self.ladder.bots))
         self.ladder.bots.extend(incoming_bots)
         self.ladder.bots = [bot for bot in self.ladder.bots if bot in bots_available]
@@ -70,9 +65,7 @@ class BubbleSorter:
         self.gather_versioned_bots()
         num_bots = len(self.ladder.bots)
         if num_bots < 2:
-            raise Exception(
-                f"Need at least 2 bots to run a bubble sort! Found {num_bots}"
-            )
+            raise Exception(f'Need at least 2 bots to run a bubble sort! Found {num_bots}')
         self.num_already_played_during_iteration = 0
 
         next_index = 0
@@ -82,36 +75,26 @@ class BubbleSorter:
                 break
             next_index = step_outcome.upper_index
 
-        overlay_data = BubbleSortOverlayData(
-            self.ladder.bots,
-            self.versioned_bots_by_name,
-            0,
-            False,
-            self.working_dir._working_dir,
-            winner=self.ladder.bots[0],
-            sort_complete=True,
-        )
+        overlay_data = BubbleSortOverlayData(self.ladder.bots, self.versioned_bots_by_name, 0, False,
+                                             self.working_dir._working_dir, winner=self.ladder.bots[0],
+                                             sort_complete=True)
         overlay_data.write(self.working_dir.overlay_interface)
 
     def get_past_result(self, bot_1, bot_2) -> MatchResult:
         path = self.get_result_path(bot_1, bot_2)
         if path.exists():
             try:
-                print(f"Found existing result {path.name}")
+                print(f'Found existing result {path.name}')
                 return MatchResult.read(path)
             except Exception as e:
-                print(
-                    f"Error loading result {path.name}. Fix/delete the result and run script again."
-                )
+                print(f'Error loading result {path.name}. Fix/delete the result and run script again.')
                 raise e
         return None
 
     def get_result_path(self, bot_1, bot_2):
         versioned_bot_1 = self.versioned_bots_by_name[bot_1]
         versioned_bot_2 = self.versioned_bots_by_name[bot_2]
-        return self.working_dir.get_version_specific_match_result(
-            versioned_bot_1, versioned_bot_2
-        )
+        return self.working_dir.get_version_specific_match_result(versioned_bot_1, versioned_bot_2)
 
     def _on_match_complete(self, result):
 
@@ -135,9 +118,7 @@ class BubbleSorter:
         if upper_index == 0:
             # We've reached the top, time to jump back to the bottom (or decide we're done)
             if self.num_already_played_during_iteration == num_bots - 1:
-                return SortStepOutcome(
-                    upper_index=upper_index, sort_complete=True
-                )  # bubble sort is over!
+                return SortStepOutcome(upper_index=upper_index, sort_complete=True)  # bubble sort is over!
             else:
                 next_below = self.ladder.bots[num_bots - 1]
                 next_above = self.ladder.bots[num_bots - 2]
@@ -152,43 +133,23 @@ class BubbleSorter:
 
         if past_result is not None:
             self.num_already_played_during_iteration += 1
-            overlay_data = BubbleSortOverlayData(
-                self.ladder.bots,
-                self.versioned_bots_by_name,
-                upper_index,
-                False,
-                self.working_dir._working_dir,
-            )
+            overlay_data = BubbleSortOverlayData(self.ladder.bots, self.versioned_bots_by_name, upper_index, False,
+                                                 self.working_dir._working_dir)
             overlay_data.write(self.working_dir.overlay_interface)
             self._on_match_complete(past_result)
             sleep(1)
             return SortStepOutcome(upper_index=upper_index, sort_complete=False)
         else:
-            overlay_data = BubbleSortOverlayData(
-                self.ladder.bots,
-                self.versioned_bots_by_name,
-                upper_index,
-                True,
-                self.working_dir._working_dir,
-            )
+            overlay_data = BubbleSortOverlayData(self.ladder.bots, self.versioned_bots_by_name, upper_index, True,
+                                                 self.working_dir._working_dir)
             overlay_data.write(self.working_dir.overlay_interface)
 
-            match_config = make_match_config(
-                self.bundle_map[next_below], self.bundle_map[next_above], self.team_size
-            )
-            match_result = run_match(
-                next_below, next_above, match_config, self.replay_preference
-            )
+            match_config = make_match_config(self.bundle_map[next_below], self.bundle_map[next_above], self.team_size)
+            match_result = run_match(next_below, next_above, match_config, self.replay_preference)
 
             match_result.write(self.get_result_path(next_below, next_above))
-            overlay_data = BubbleSortOverlayData(
-                self.ladder.bots,
-                self.versioned_bots_by_name,
-                upper_index,
-                True,
-                self.working_dir._working_dir,
-                winner=match_result.winner,
-            )
+            overlay_data = BubbleSortOverlayData(self.ladder.bots, self.versioned_bots_by_name, upper_index, True,
+                                                 self.working_dir._working_dir, winner=match_result.winner)
             overlay_data.write(self.working_dir.overlay_interface)
 
             self._on_match_complete(match_result)
@@ -197,26 +158,20 @@ class BubbleSorter:
 
 
 def get_modified_date(folder) -> datetime:
-    ignored_directories = ["__pycache__"]
-    ignored_files = ["RLBot_Core_Interface.dll"]
+    ignored_directories = ['__pycache__']
+    ignored_files = ['RLBot_Core_Interface.dll']
     max_timestamp = 0
     for root, dirs, files in os.walk(folder, topdown=True):
         dirs[:] = [d for d in dirs if d not in ignored_directories]
-        timestamp = max(
-            os.stat(os.path.join(root, f)).st_mtime
-            for f in files
-            if f not in ignored_files
-        )
+        timestamp = max(os.stat(os.path.join(root, f)).st_mtime for f in files if f not in ignored_files)
         if timestamp > max_timestamp:
             max_timestamp = timestamp
 
     return datetime.fromtimestamp(max_timestamp)
 
 
-def run_bubble_sort(
-    working_dir: WorkingDir, team_size: int, replay_preference: ReplayPreference
-):
+def run_bubble_sort(working_dir: WorkingDir, team_size: int, replay_preference: ReplayPreference):
     sorter = BubbleSorter(working_dir, team_size, replay_preference)
     sorter.begin()
-    print("Bubble sort is complete!")
+    print('Bubble sort is complete!')
     time.sleep(10)  # Leave some time to display the overlay.

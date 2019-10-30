@@ -9,17 +9,17 @@ from autoleagueplay.load_bots import psyonix_bots_skill
 from autoleagueplay.paths import PackageFiles
 
 
-def make_match_config(
-    blue: BotConfigBundle,
-    orange: BotConfigBundle,
-    team_size: int = 1,
-    config_location=PackageFiles.default_match_config,
-) -> MatchConfig:
+def make_match_config(blue: BotConfigBundle, orange: BotConfigBundle, team_size: int=1,
+                      config_location=PackageFiles.default_match_config) -> MatchConfig:
 
     match_config = read_match_config_from_file(config_location)
-    match_config.game_map = random.choice(
-        ["ChampionsField", "Farmstead", "DFHStadium", "Wasteland", "BeckwithPark"]
-    )
+    match_config.game_map = random.choice([
+        'ChampionsField',
+        'Farmstead',
+        'DFHStadium',
+        'Wasteland',
+        'BeckwithPark'
+    ])
     player_configs = []
 
     for i in range(0, team_size):
