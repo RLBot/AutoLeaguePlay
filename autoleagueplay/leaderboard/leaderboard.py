@@ -7,7 +7,12 @@ from autoleagueplay.leaderboard.symbols import Symbols
 from autoleagueplay.paths import WorkingDir
 
 
-def generate_leaderboard(working_dir: WorkingDir, run_strategy: RunStrategy, allow_extra: bool=True, background: bool=True):
+def generate_leaderboard(
+    working_dir: WorkingDir,
+    run_strategy: RunStrategy,
+    allow_extra: bool = True,
+    background: bool = True,
+):
     """
     Created a leaderboard that shows differences between the old ladder and the new ladder.
     :param working_dir: The working directory
@@ -19,10 +24,10 @@ def generate_leaderboard(working_dir: WorkingDir, run_strategy: RunStrategy, all
     :param frames_per_second: frames per second of the clip.
     """
 
-    assert working_dir.ladder.exists(), f'\'{working_dir.ladder}\' does not exist.'
+    assert working_dir.ladder.exists(), f"'{working_dir.ladder}' does not exist."
 
     if not working_dir.new_ladder.exists():
-        print(f'The new ladder has not been determined yet.')
+        print(f"The new ladder has not been determined yet.")
         return
 
     old_ladder = Ladder.read(working_dir.ladder)
@@ -36,11 +41,11 @@ def generate_leaderboard(working_dir: WorkingDir, run_strategy: RunStrategy, all
     # PARAMETERS FOR DRAWING:
 
     # Divisions. We only have color palettes configured for a certain number of them, so enforce a limit.
-    divisions = Ladder.DIVISION_NAMES[:len(Symbols.palette)]
+    divisions = Ladder.DIVISION_NAMES[: len(Symbols.palette)]
 
-    extra = (allow_extra and len(new_ladder.bots) > 40)
+    extra = allow_extra and len(new_ladder.bots) > 40
 
-    '''
+    """
     Each division has the origin at the top left corner of their emblem.
 
     Offsets:
@@ -52,7 +57,7 @@ def generate_leaderboard(working_dir: WorkingDir, run_strategy: RunStrategy, all
         div increments are how much to move the origin between each division.
         bot increment is how much to move down for each bot name.
 
-    '''
+    """
 
     # Start positions for drawing.
     start_x = 0
@@ -113,12 +118,12 @@ def generate_leaderboard(working_dir: WorkingDir, run_strategy: RunStrategy, all
         # Draws the division emblem.
         try:
             # Opens the division emblem image.
-            emblem = Image.open(LeaderboardPaths.emblems / f'{div}.png')
+            emblem = Image.open(LeaderboardPaths.emblems / f"{div}.png")
             # Pastes emblem onto image.
             leaderboard.paste(emblem, div_pos, emblem)
         except:
             # Sends warning message if it can't find the emblem.
-            print(f'WARNING: Missing emblem for {div}.')
+            print(f"WARNING: Missing emblem for {div}.")
 
         # Draws the division title at an offset.
         title_pos = (div_pos[0] + title_x_offset, div_pos[1] + title_y_offset)
@@ -128,48 +133,62 @@ def generate_leaderboard(working_dir: WorkingDir, run_strategy: RunStrategy, all
         for ii, bot in enumerate(new_ladder.division(i)):
 
             # Calculates position for the bot name and draws it.
-            bot_pos = (div_pos[0] + bot_x_offset, div_pos[1] + bot_y_offset + ii * bot_y_incr)
+            bot_pos = (
+                div_pos[0] + bot_x_offset,
+                div_pos[1] + bot_y_offset + ii * bot_y_incr,
+            )
             draw.text(xy=bot_pos, text=bot, fill=bot_colour, font=bot_font)
 
             # Calculates symbol position.
             sym_pos = (bot_pos[0] + sym_x_offset, bot_pos[1] + sym_y_offset)
-            sym_desc_pos = (bot_pos[0] + sym_desc_x_offset, bot_pos[1] + sym_desc_y_offset)
+            sym_desc_pos = (
+                bot_pos[0] + sym_desc_x_offset,
+                bot_pos[1] + sym_desc_y_offset,
+            )
             sym_div_colors = Symbols.palette[div]
 
             # Pastes appropriate symbol
             if bot in new_bots:
-                symbol = Image.open(LeaderboardPaths.symbols / f'{div}_new.png')
+                symbol = Image.open(LeaderboardPaths.symbols / f"{div}_new.png")
                 leaderboard.paste(symbol, sym_pos, symbol)
 
             elif bot in played:
 
                 # Insert symbol to show rank movement
                 if ranks_moved[bot] > 0:
-                    symbol = Image.open(LeaderboardPaths.symbols / f'{div}_up.png')
+                    symbol = Image.open(LeaderboardPaths.symbols / f"{div}_up.png")
                 elif ranks_moved[bot] < 0:
-                    symbol = Image.open(LeaderboardPaths.symbols / f'{div}_down.png')
+                    symbol = Image.open(LeaderboardPaths.symbols / f"{div}_down.png")
                 else:
-                    symbol = Image.open(LeaderboardPaths.symbols / f'{div}_played.png')
+                    symbol = Image.open(LeaderboardPaths.symbols / f"{div}_played.png")
                 leaderboard.paste(symbol, sym_pos, symbol)
 
                 if ranks_moved[bot] != 0:
-                    move_txt = f'{abs(ranks_moved[bot])}'
+                    move_txt = f"{abs(ranks_moved[bot])}"
                     w, h = draw.textsize(move_txt, font=bot_font)
-                    color = sym_div_colors[Symbols.DARK if ranks_moved[bot] < 0 else Symbols.LIGHT]
-                    draw.text(xy=(sym_desc_pos[0] - w / 2, sym_desc_pos[1]), text=move_txt,
-                              fill=color, font=bot_font)
+                    color = sym_div_colors[
+                        Symbols.DARK if ranks_moved[bot] < 0 else Symbols.LIGHT
+                    ]
+                    draw.text(
+                        xy=(sym_desc_pos[0] - w / 2, sym_desc_pos[1]),
+                        text=move_txt,
+                        fill=color,
+                        font=bot_font,
+                    )
 
     # Saves the image.
-    leaderboard.save(working_dir.leaderboard, 'PNG')
+    leaderboard.save(working_dir.leaderboard, "PNG")
 
-    print('Successfully generated leaderboard.')
+    print("Successfully generated leaderboard.")
 
 
-def generate_leaderboard_clip(working_dir: WorkingDir, duration: float=5.0, frames_per_second: int=60):
+def generate_leaderboard_clip(
+    working_dir: WorkingDir, duration: float = 5.0, frames_per_second: int = 60
+):
     if working_dir.leaderboard.exists():
         clip = ImageClip(str(working_dir.leaderboard)).set_duration(duration)
         clip.write_videofile(str(working_dir.leaderboard_clip), fps=frames_per_second)
-        print('Successfully generated leaderboard clip.')
+        print("Successfully generated leaderboard clip.")
 
     else:
-        print(f'No leaderboard has been generated yet.')
+        print(f"No leaderboard has been generated yet.")

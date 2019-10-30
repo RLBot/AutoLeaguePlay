@@ -23,12 +23,16 @@ class SeasonSheet:
 
 # The sheet info for each season
 SEASONS = [
-    SeasonSheet(0, '1XULvW97g46EdrYRuhiHBfARDkviULYjRO5dA8sMmxkY', 'Off Season 0', 4, 4, 50, 1),
-    SeasonSheet(1, '1XULvW97g46EdrYRuhiHBfARDkviULYjRO5dA8sMmxkY', 'Season 1', 4, 4, 60, 2),
+    SeasonSheet(
+        0, "1XULvW97g46EdrYRuhiHBfARDkviULYjRO5dA8sMmxkY", "Off Season 0", 4, 4, 50, 1
+    ),
+    SeasonSheet(
+        1, "1XULvW97g46EdrYRuhiHBfARDkviULYjRO5dA8sMmxkY", "Season 1", 4, 4, 60, 2
+    ),
 ]
 
 # If modifying these scopes, delete the file 'cred/sheets-api-token.pickle'
-SHEETS_SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+SHEETS_SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
 
 def fetch_ladder_from_sheets(season: int, week_num: int) -> Ladder:
@@ -37,16 +41,20 @@ def fetch_ladder_from_sheets(season: int, week_num: int) -> Ladder:
 
 
 def fetch_bots_from_sheets(season: int, week_num: int) -> List[str]:
-    assert 0 <= season < len(SEASONS), 'Invalid or unknown season number'
+    assert 0 <= season < len(SEASONS), "Invalid or unknown season number"
     season_sheet = SEASONS[season]
     range = get_ladder_range(season_sheet, week_num)
-    values = get_values_from_sheet(get_credentials(), season_sheet.sheet_id, range, season_sheet.sheet_name)
+    values = get_values_from_sheet(
+        get_credentials(), season_sheet.sheet_id, range, season_sheet.sheet_name
+    )
     return [row[0] for row in values]
 
 
 def get_ladder_range(season_sheet: SeasonSheet, week_num: int) -> str:
-    col = get_col_name(season_sheet.initial_ladder_col + week_num * (1 + season_sheet.ladder_spacing))
-    return f'{col}{season_sheet.rank_one_row}:{col}{season_sheet.rank_one_row + season_sheet.ladder_length}'
+    col = get_col_name(
+        season_sheet.initial_ladder_col + week_num * (1 + season_sheet.ladder_spacing)
+    )
+    return f"{col}{season_sheet.rank_one_row}:{col}{season_sheet.rank_one_row + season_sheet.ladder_length}"
 
 
 def get_col_name(col_num: int) -> str:
@@ -69,7 +77,7 @@ def get_credentials():
     # The file 'cred/sheets-api-token.pickle' stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first time.
     if PackageFiles.sheets_token.exists():
-        with open(PackageFiles.sheets_token, 'rb') as token:
+        with open(PackageFiles.sheets_token, "rb") as token:
             creds = pickle.load(token)
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
@@ -77,23 +85,29 @@ def get_credentials():
             creds.refresh(Request())
         else:
             if PackageFiles.credentials.exists():
-                flow = InstalledAppFlow.from_client_secrets_file(PackageFiles.credentials, SHEETS_SCOPES)
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    PackageFiles.credentials, SHEETS_SCOPES
+                )
                 creds = flow.run_local_server(port=0)
             else:
-                raise ValueError(f"""ERROR: Cannot use Google Sheet API due to missing credentials.
+                raise ValueError(
+                    f"""ERROR: Cannot use Google Sheet API due to missing credentials.
                     Go to \'https://developers.google.com/sheets/api/quickstart/python\'.
                     Click the \'Enable the Google Sheets API\' button, accept, and download the \'credentials.json\'.
                     Put the \'credentials.json\' in the directory \'{PackageFiles.credentials.parent.absolute()}\' and try again.
                     Next time you run the script a browser will open, where Google asks you if this script can get permission.
                     Afterwards everything should work.
-                    """)
+                    """
+                )
         # Save the credentials for the next run
-        with open(PackageFiles.sheets_token, 'wb') as token:
+        with open(PackageFiles.sheets_token, "wb") as token:
             pickle.dump(creds, token)
     return creds
 
 
-def get_values_from_sheet(creds, spreadsheet_id: str, range: str, sheet_name: str) -> List[List[str]]:
+def get_values_from_sheet(
+    creds, spreadsheet_id: str, range: str, sheet_name: str
+) -> List[List[str]]:
     """
     Uses the Google Sheets API v4 to fetch the values from a spreadsheet.
     :param creds: credentials
@@ -105,15 +119,17 @@ def get_values_from_sheet(creds, spreadsheet_id: str, range: str, sheet_name: st
 
     range_name = str(sheet_name) + "!" + str(range)
 
-    service = build('sheets', 'v4', credentials=creds)
+    service = build("sheets", "v4", credentials=creds)
 
     # Call the Sheets API
     sheet = service.spreadsheets()
-    result = sheet.values().get(spreadsheetId=spreadsheet_id, range=range_name).execute()
-    return result.get('values', [])
+    result = (
+        sheet.values().get(spreadsheetId=spreadsheet_id, range=range_name).execute()
+    )
+    return result.get("values", [])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # As test, fetch and print the initial ladder
     bots = fetch_bots_from_sheets(1, 0)
     print(bots)

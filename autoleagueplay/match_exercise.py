@@ -14,7 +14,13 @@ from rlbottraining.training_exercise import TrainingExercise
 
 from autoleagueplay.match_result import MatchResult
 from autoleagueplay.replays import ReplayPreference, ReplayMonitor
-from autoleagueplay.key_macros import hide_hud_macro, do_director_spectating_macro, hide_rendering_macro, show_percentages_macro, end_game_macro
+from autoleagueplay.key_macros import (
+    hide_hud_macro,
+    do_director_spectating_macro,
+    hide_rendering_macro,
+    show_percentages_macro,
+    end_game_macro,
+)
 
 
 @dataclass
@@ -32,10 +38,17 @@ class MercyRule:
 
         # The mercy is detected as soon as the goal is scored. We want to watch the replay of the goal so
         # the match is terminated once we see the following kickoff
-        if abs(blue_score - orange_score) >= self.required_goal_diff and not self.mercy_detected:
+        if (
+            abs(blue_score - orange_score) >= self.required_goal_diff
+            and not self.mercy_detected
+        ):
             self.que_save_replay()
             self.mercy_detected = True
-        elif not self.game_ended and packet.game_info.is_kickoff_pause and self.mercy_detected:
+        elif (
+            not self.game_ended
+            and packet.game_info.is_kickoff_pause
+            and self.mercy_detected
+        ):
             self.game_ended = True
             end_game_macro(True)
 
@@ -46,7 +59,7 @@ class MercyRule:
 
 class FailDueToNoReplay(Fail):
     def __repr__(self):
-        return 'FAIL: Match finished but no replay was written to disk.'
+        return "FAIL: Match finished but no replay was written to disk."
 
 
 @dataclass
@@ -76,9 +89,16 @@ class MatchGrader(Grader):
         self.mercy_rule.check_for_mercy(tick.game_tick_packet)
         if self.mercy_rule.game_ended:
             self.match_result = fetch_match_score(tick.game_tick_packet)
-            time.sleep(1)  # Give time for replay_monitor to register replay and for RL to load main menu
-            if self.replay_monitor.replay_id or self.replay_monitor.replay_preference == ReplayPreference.IGNORE_REPLAY:
+            time.sleep(
+                1
+            )  # Give time for replay_monitor to register replay and for RL to load main menu
+            if (
+                self.replay_monitor.replay_id
+                or self.replay_monitor.replay_preference
+                == ReplayPreference.IGNORE_REPLAY
+            ):
                 self.replay_monitor.stop_monitoring()
+                self.replay_monitor.anonymize_replay()
                 return Pass()
 
         # Check if game is over and replay recorded
@@ -86,12 +106,18 @@ class MatchGrader(Grader):
         game_info = tick.game_tick_packet.game_info
         if game_info.is_match_ended and self.saw_active_packets:
             self.match_result = fetch_match_score(tick.game_tick_packet)
-            if self.replay_monitor.replay_id or self.replay_monitor.replay_preference == ReplayPreference.IGNORE_REPLAY:
+            if (
+                self.replay_monitor.replay_id
+                or self.replay_monitor.replay_preference
+                == ReplayPreference.IGNORE_REPLAY
+            ):
                 self.replay_monitor.stop_monitoring()
+                self.replay_monitor.anonymize_replay()
                 return Pass()
             seconds_since_game_end = game_info.seconds_elapsed - self.last_match_time
             if seconds_since_game_end > 15:
                 self.replay_monitor.stop_monitoring()
+                self.replay_monitor.anonymize_replay()
                 return FailDueToNoReplay()
         else:
             if game_info.is_round_active and not game_info.is_match_ended:
@@ -113,7 +139,7 @@ def fetch_match_score(packet: GameTickPacket):
         blue_saves=blue.score_info.saves,
         orange_saves=orange.score_info.saves,
         blue_points=blue.score_info.score,
-        orange_points=orange.score_info.score
+        orange_points=orange.score_info.score,
     )
 
 

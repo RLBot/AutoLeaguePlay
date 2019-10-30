@@ -47,7 +47,9 @@ def load_psyonix_bots():
     return psyonix_allstar, psyonix_pro, psyonix_rookie
 
 
-def check_bot_folder(working_dir: WorkingDir, run_strategy: Optional[RunStrategy]=None) -> bool:
+def check_bot_folder(
+    working_dir: WorkingDir, run_strategy: Optional[RunStrategy] = None
+) -> bool:
     """
     Prints all bots missing from the bot folder.
     If odd_week is not None, it will filter for bots needed for the given type of week.
@@ -55,14 +57,18 @@ def check_bot_folder(working_dir: WorkingDir, run_strategy: Optional[RunStrategy
     """
     bots = load_all_bots(working_dir)
     ladder = Ladder.read(working_dir.ladder)
-    needed_bots = ladder.all_playing_bots(run_strategy) if run_strategy is not None else ladder.bots
+    needed_bots = (
+        ladder.all_playing_bots(run_strategy)
+        if run_strategy is not None
+        else ladder.bots
+    )
     none_missing = True
     for bot in needed_bots:
         if bot not in bots.keys():
-            print(f'{bot} is missing from the bot folder.')
+            print(f"{bot} is missing from the bot folder.")
             none_missing = False
     if none_missing:
-        print('No needed bots are missing from the bot folder.')
+        print("No needed bots are missing from the bot folder.")
         return True
     return False
 
@@ -79,8 +85,19 @@ def load_all_bots_versioned(working_dir: WorkingDir) -> Mapping[str, VersionedBo
         date = None
         try:
             iso_date_binary = subprocess.check_output(
-                ["git", "log", "-n", "1", '--format="%ad"', "--date=iso-strict", "--", relative_path], cwd=root)
-            iso_date = iso_date_binary.decode(sys.stdout.encoding).strip("\"\n")
+                [
+                    "git",
+                    "log",
+                    "-n",
+                    "1",
+                    '--format="%ad"',
+                    "--date=iso-strict",
+                    "--",
+                    relative_path,
+                ],
+                cwd=root,
+            )
+            iso_date = iso_date_binary.decode(sys.stdout.encoding).strip('"\n')
 
             if len(iso_date) > 0:
                 date = datetime.fromisoformat(iso_date)
@@ -99,41 +116,41 @@ def load_all_bots_versioned(working_dir: WorkingDir) -> Mapping[str, VersionedBo
     versioned_bots.add(VersionedBot(psyonix_pro, DEFAULT_TIMESTAMP))
     versioned_bots.add(VersionedBot(psyonix_rookie, DEFAULT_TIMESTAMP))
 
-    return {
-        vb.get_unversioned_key(): vb
-        for vb in versioned_bots
-    }
+    return {vb.get_unversioned_key(): vb for vb in versioned_bots}
 
 
 def get_modified_date(folder) -> datetime:
-    ignored_directories = ['__pycache__', '.git']
-    ignored_files = ['RLBot_Core_Interface.dll']
-    ignored_types = ['.cfg']
+    ignored_directories = ["__pycache__", ".git"]
+    ignored_files = ["RLBot_Core_Interface.dll"]
+    ignored_types = [".cfg"]
     max_timestamp = 0
     for root, dirs, files in os.walk(folder, topdown=True):
         dirs[:] = [d for d in dirs if d not in ignored_directories]
-        times = [os.stat(os.path.join(root, f)).st_mtime for f in files
-                 if f not in ignored_files and Path(f).suffix not in ignored_types]
+        times = [
+            os.stat(os.path.join(root, f)).st_mtime
+            for f in files
+            if f not in ignored_files and Path(f).suffix not in ignored_types
+        ]
         if len(times) > 0:
             timestamp = max(times)
             if timestamp > max_timestamp:
                 max_timestamp = timestamp
 
-    return datetime.fromtimestamp(max_timestamp)
+    return datetime.utcfromtimestamp (max_timestamp) # https://github.com/home-assistant/appdaemon/issues/83
 
 
 def unzip_all_bots(working_dir: WorkingDir):
     for root, dirs, files in os.walk(working_dir._working_dir, topdown=True):
         dirs[:] = [d for d in dirs]
         for file in files:
-            if '.zip' in file:
+            if ".zip" in file:
                 path = os.path.join(root, file)
                 if is_already_unzipped(path):
-                    print(f'Skipping {path} because it has already been extracted.')
+                    print(f"Skipping {path} because it has already been extracted.")
                     continue
-                with ZipFile(path, 'r') as zipObj:
+                with ZipFile(path, "r") as zipObj:
                     # Extract all the contents of zip file in current directory
-                    print(f'Extracting {path}')
+                    print(f"Extracting {path}")
                     zipObj.extractall(path=root)
 
                     # https://stackoverflow.com/questions/9813243/extract-files-from-zip-file-and-retain-mod-date
@@ -145,7 +162,7 @@ def unzip_all_bots(working_dir: WorkingDir):
 
 
 def is_already_unzipped(zipfile):
-    with ZipFile(zipfile, 'r') as zipObj:
+    with ZipFile(zipfile, "r") as zipObj:
         for zip_info in zipObj.infolist():
             extracted_path = os.path.join(os.path.dirname(zipfile), zip_info.filename)
             if os.path.isfile(extracted_path):

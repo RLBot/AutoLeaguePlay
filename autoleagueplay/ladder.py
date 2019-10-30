@@ -11,10 +11,27 @@ class RunStrategy(Enum):
 
 
 class Ladder:
-    DIVISION_NAMES = ('Quantum', 'Overclocked', 'Processor', 'Circuit', 'Transistor', 'Abacus', 'Babbage', 'Colossus',
-                 'Dragon', 'ENIAC', 'Ferranti', 'Grundy', 'Hobbit', 'Imagination', 'Jupiter', 'Komputer', 'Lambda')
+    DIVISION_NAMES = (
+        "Quantum",
+        "Overclocked",
+        "Processor",
+        "Circuit",
+        "Transistor",
+        "Abacus",
+        "Babbage",
+        "Colossus",
+        "Dragon",
+        "ENIAC",
+        "Ferranti",
+        "Grundy",
+        "Hobbit",
+        "Imagination",
+        "Jupiter",
+        "Komputer",
+        "Lambda",
+    )
 
-    def __init__(self, bots: List[str], division_size: int=4, overlap_size: int=1):
+    def __init__(self, bots: List[str], division_size: int = 4, overlap_size: int = 1):
         self.bots = bots
         self.division_size = division_size
         self.overlap_size = overlap_size
@@ -24,7 +41,11 @@ class Ladder:
         """
         Returns a list of bots in the division. Division at index 0 is Quantum, division at index 1 is Overclock, etc.
         """
-        return self.bots[division_index * self.division_size:(1 + division_index) * self.division_size]
+        return self.bots[
+            division_index
+            * self.division_size : (1 + division_index)
+            * self.division_size
+        ]
 
     def division_count(self) -> int:
         return math.ceil(len(self.bots) / self.division_size)
@@ -34,7 +55,12 @@ class Ladder:
         Returns a list of bots participating in the round robin based on division index. Division at index 0 is Quantum,
         division at index 1 is Overclock, etc.
         """
-        return self.bots[division_index * self.division_size:(1 + division_index) * self.division_size + self.overlap_size]
+        return self.bots[
+            division_index
+            * self.division_size : (1 + division_index)
+            * self.division_size
+            + self.overlap_size
+        ]
 
     def playing_division_indices(self, run_strategy: RunStrategy) -> range:
         """
@@ -63,19 +89,21 @@ class Ladder:
         return playing
 
     def write(self, path: Path):
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             for bot in self.bots:
-                f.write(f'{bot}\n')
+                f.write(f"{bot}\n")
 
     @staticmethod
-    def read(path: Path, division_size: int=4) -> 'Ladder':
+    def read(path: Path, division_size: int = 4) -> "Ladder":
         if not path.is_file():
-            raise ValueError('Provided path is not a file.')
-        with open(path, 'r') as f:
+            raise ValueError("Provided path is not a file.")
+        with open(path, "r") as f:
             return Ladder([line.strip() for line in f], division_size)
 
 
-def ladder_differences(old_ladder: Ladder, new_ladder: Ladder) -> Tuple[List[str], Mapping[str, int]]:
+def ladder_differences(
+    old_ladder: Ladder, new_ladder: Ladder
+) -> Tuple[List[str], Mapping[str, int]]:
     """
     Returns a list of new bots and a dictionary with bot movements on the ladder. If a bot moved up the number in
     the dictionary will be positive, if it moved down, it will be negative.
@@ -89,6 +117,6 @@ def ladder_differences(old_ladder: Ladder, new_ladder: Ladder) -> Tuple[List[str
             new_bots.append(bot)
         else:
             # Finds out how much the bot moved. Positive numbers means it moved up and negative numbers means down
-            ranks_moved[bot] = (old_ladder.bots.index(bot) - new_ladder.bots.index(bot))
+            ranks_moved[bot] = old_ladder.bots.index(bot) - new_ladder.bots.index(bot)
 
     return new_bots, ranks_moved

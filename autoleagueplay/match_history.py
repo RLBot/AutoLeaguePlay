@@ -6,7 +6,6 @@ from autoleagueplay.match_result import MatchResult
 
 
 class MatchHistory:
-
     def __init__(self, match_files: List[Path]):
         self.match_files = match_files
         self.match_files.sort(reverse=True)
@@ -42,7 +41,9 @@ class MatchHistory:
             elif match_result.winner == orange:
                 wins[orange] += 1
             else:
-                raise Exception(f'Unexpected bot name {match_result.winner} when analyzing history.')
+                raise Exception(
+                    f"Unexpected bot name {match_result.winner} when analyzing history."
+                )
         return wins
 
     def get_current_streak_length(self):
@@ -60,9 +61,13 @@ class MatchHistory:
     def make_result_file_prefix(versioned_bot_key_1: str, versioned_bot_key_2: str):
         bot_keys = [versioned_bot_key_1, versioned_bot_key_2]
         bot_keys.sort()
-        return f'{bot_keys[0]}_vs_{bot_keys[1]}'
+        return f"{bot_keys[0]}_vs_{bot_keys[1]}"
 
     @staticmethod
-    def make_result_file_name(versioned_bot_key_1: str, versioned_bot_key_2: str, time: datetime):
-        prefix = MatchHistory.make_result_file_prefix(versioned_bot_key_1, versioned_bot_key_2)
+    def make_result_file_name(
+        versioned_bot_key_1: str, versioned_bot_key_2: str, time: datetime
+    ):
+        prefix = MatchHistory.make_result_file_prefix(
+            versioned_bot_key_1, versioned_bot_key_2
+        )
         return f'{prefix}_at_{time.isoformat().replace(":", "-")}.json'
