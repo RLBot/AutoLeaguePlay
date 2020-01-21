@@ -2,7 +2,7 @@
 
 Usage:
     autoleagueplay setup <working_dir>
-    autoleagueplay run (odd | even | rolling) [--teamsize=T] [--replays=R] [--ignore-missing] [--autoshutdown=S] [--stale-rematch-threshold=X] [--half-robin]
+    autoleagueplay run (odd | even | rolling) [--teamsize=T] [--replays=R] [--ignore-missing] [--autoshutdown=S] [--stale-rematch-threshold=X] [--half-robin] [--obs]
     autoleagueplay bubble [--teamsize=T] [--replays=R]
     autoleagueplay list (odd | even | rolling) [--stale-rematch-threshold=X] [--half-robin]
     autoleagueplay results (odd | even | rolling)
@@ -26,11 +26,15 @@ Options:
     --stale-rematch-threshold=X  Skip matches when a bot has beaten another X times in a row, and neither of them have updated their code.
     --half-robin                 The divisions will be cut in half (with overlap) when setting up round-robins, for fewer matches.
     --top-only                   Only display top 40 bots on the leaderboard even though there might be more bots.
+    --obs                        If you wish to use the obs plugin, remember to fill the settings in obs-script/obs_settings.json
 """
 import sys
 from pathlib import Path
 
 from docopt import docopt
+
+import threading, os
+from subprocess import call
 
 from autoleagueplay.bubble_sort import run_bubble_sort
 from autoleagueplay.ladder import RunStrategy
@@ -96,6 +100,19 @@ def main():
                 raise NotImplementedError()
 
         elif arguments['run']:
+
+            if arguments['--obs']:
+                # Todo: start another thread with the obs controller. Password and options as well
+                # Options may include: show goal overlay, show devs, show cheer bar (and channel if so), show logo
+                # Record options: record each game. dont record anything (recording could be handled by ALP)
+
+                obs_controller_path = os.path.join(os.path.dirname(__file__), '../obs-script/obs_controller.py')
+
+                def obs_controller_thread():
+                    call(["python", obs_controller_path])
+                controllerThread = threading.Thread(target=obs_controller_thread)
+                controllerThread.start()
+
 
             replay_preference = ReplayPreference(arguments['--replays'])
             team_size = int(arguments['--teamsize'])
