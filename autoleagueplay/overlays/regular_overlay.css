@@ -290,4 +290,14 @@ body {
     width: 1175px;
     height: 46px;
     z-index:15;
-} 
+}
+
+#goal
+{
+    left: 0px;
+    top: 0px;
+    position: absolute;
+    width: 1920px;
+    height: 1080px;
+    z-index: 16;
+}
