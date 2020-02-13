@@ -1,6 +1,7 @@
 body {
     margin: 0;
     padding: 0;
+    background-color: rgba(0,0,0,0);
 }
 
 #background
@@ -16,7 +17,7 @@ body {
     z-index:0;
 }
 
-#overlaybg
+#Main_Background
 {
     left: 341px;
     top: 10px;
@@ -26,263 +27,226 @@ body {
     z-index:3;
 }
 
-.logob
+.Logo
+{
+    position: absolute;
+    height: 76px;
+    max-width: 200px;
+    z-index: 5;
+}
+
+#Logo_Blue
 {
     left: 300px;
     top: 10px;
-    position: absolute;
-    max-width: 200px;
-    max-height: 76px;
-    z-index:5;
 }
 
-.logoo
+#Logo_Orange
 {
     right: 300px;
     top: 10px;
-    position: absolute;
-    max-width: 200px;
-    max-height: 76px;
-    z-index:5;
 }
 
+.Win_Counter_Frame
+{
+    position: absolute;
+    z-index:8;
+}
+.Win_Counter_Glow
+{
+    position: absolute;
+    z-index:9;
+}
 
-#win_counter_frame_0_b
+#Win_Counter_Frame_0_Blue
 {
     left: 716px;
     top: 88px;
-    position: absolute;
-    width: 124px;
-    height: 18px;
-    z-index:8;
 }
 
-#win_counter_frame_1_b
+#Win_Counter_Frame_1_Blue
 {
     left: 678px;
     top: 88px;
-    position: absolute;
-    width: 124px;
-    height: 18px;
-    z-index:8;
 }
 
-#win_counter_frame_2_b
+#Win_Counter_Frame_2_Blue
 {
     left: 640px;
     top: 88px;
-    position: absolute;
-    width: 124px;
-    height: 18px;
-    z-index:8;
 }
 
-#win_counter_glow_0_b
+#Win_Counter_Glow_0_Blue
 {
     left: 716px;
     top: 88px;
-    position: absolute;
-    width: 124px;
-    height: 18px;
-    z-index:9;
 }
 
-#win_counter_glow_1_b
+#Win_Counter_Glow_1_Blue
 {
     left: 678px;
     top: 88px;
-    position: absolute;
-    width: 124px;
-    height: 18px;
-    z-index:9;
 }
 
-#win_counter_glow_2_b
+#Win_Counter_Glow_2_Blue
 {
     left: 640px;
     top: 88px;
-    position: absolute;
-    width: 124px;
-    height: 18px;
-    z-index:9;
 }
 
-#win_counter_frame_0_o
+#Win_Counter_Frame_0_Orange
 {
     right: 716px;
     top: 88px;
-    position: absolute;
-    width: 124px;
-    height: 18px;
-    z-index:8;
     transform: scaleX(-1);
 }
 
-#win_counter_frame_1_o
+#Win_Counter_Frame_1_Orange
 {
     right: 678px;
     top: 88px;
-    position: absolute;
-    width: 124px;
-    height: 18px;
-    z-index:8;
     transform: scaleX(-1);
 }
 
-#win_counter_frame_2_o
+#Win_Counter_Frame_2_Orange
 {
     right: 640px;
     top: 88px;
-    position: absolute;
-    width: 124px;
-    height: 18px;
-    z-index:8;
     transform: scaleX(-1);
 }
 
-#win_counter_glow_0_o
+#Win_Counter_Glow_0_Orange
 {
     right: 716px;
     top: 88px;
-    position: absolute;
-    width: 124px;
-    height: 18px;
-    z-index:9;
     transform: scaleX(-1);
 }
 
-#win_counter_glow_1_o
+#Win_Counter_Glow_1_Orange
 {
     right: 678px;
     top: 88px;
-    position: absolute;
-    width: 124px;
-    height: 18px;
-    z-index:9;
     transform: scaleX(-1);
 }
 
-#win_counter_glow_2_o
+#Win_Counter_Glow_2_Orange
 {
     right: 640px;
     top: 88px;
-    position: absolute;
-    width: 124px;
-    height: 18px;
-    z-index:9;
     transform: scaleX(-1);
 }
 
-#cheer
+.Cheer_Bar
 {
     left: 127px;
     top: 83px;
     position: absolute;
     width: 1670px;
     height: 18px;
+}
+
+#Cheer_Bar_Back
+{
     z-index:10;
 }
-#cheert
+
+#Cheer_Bar_Front
 {
-    left: 127px;
-    top: 83px;
-    position: absolute;
-    width: 1670px;
-    height: 18px;
     z-index:12;
 }
-#boostmeterblue
+
+.Boost_Meter
+{
+    top: 120px;
+    position: absolute;
+    width: 34px;
+    height: 285px;
+    z-index:11;
+}
+
+#Boost_Meter_Blue
 {
     left: 16px;
-    top: 120px;
-    position: absolute;
-    width: 34px;
-    height: 285px;
-    z-index:11;
+
 }
 
-#boostmeterorange
+#Boost_Meter_Orange
 {
     right: 16px;
-    top: 120px;
-    position: absolute;
-    width: 34px;
-    height: 285px;
-    z-index:11;
     transform: scaleX(-1);
 
 }
 
-#boostfillblue
+.Boost_Fill
+{
+    bottom: 681px;
+    position: absolute;
+    width: 27px;
+    height: 273px;
+    z-index:10;
+}
+
+#Boost_Fill_Blue
 {
     left: 21px;
-    top: 126px;
-    position: absolute;
-    width: 27px;
-    height: 273px;
-    z-index:13;
+    float: bottom;
+    transform: scaleY(0.5);
+    transform-origin: bottom;
 }
 
-#boostfillorange
+#Boost_Fill_Orange
 {
     right: 21px;
-    top: 126px;
-    position: absolute;
-    width: 27px;
-    height: 273px;
-    z-index:14;
     transform: scaleX(-1);
+    transform: scaleY(0.8);
+    transform-origin: bottom;
 }
 
-#botnameb
+.Bot_Name
 {
-    right: 1174px;
     top: 17px;
     position: absolute;
     z-index:13;
-    text-align: right;
     font-family: Arial, r, monospace;
     font-size: 32px;
     color: white;
 }
 
-#botnameo
-{
-    left: 1174px;
-    top: 17px;
-    position: absolute;
-    z-index:13;
-    text-align: left;
-    font-family: Arial, r, monospace;
-    font-size: 32px;
-    color: white;
-}
-
-#devnameb
+#Bot_Name_Blue
 {
     right: 1174px;
-    top: 53px;
-    position: absolute;
-    z-index:13;
     text-align: right;
-    font-family: Arial, r, monospace;
-    font-size: 19px;
-    color: white;
 }
 
-#devnameo
+#Bot_Name_Orange
 {
     left: 1174px;
+    text-align: left;
+}
+
+.Dev_Name
+{
     top: 53px;
     position: absolute;
     z-index:13;
-    text-align: left;
     font-family: Arial, r, monospace;
     font-size: 19px;
     color: white;
 }
 
-#socialmediabar
+#Dev_Name_Blue
+{
+    right: 1174px;
+    text-align: right;
+}
+
+#Dev_Name_Orange
+{
+    left: 1174px;
+    text-align: left;
+}
+
+.Social_Media_Bar
 {
     left: 367px;
     top: 1034px;
@@ -292,7 +256,7 @@ body {
     z-index:15;
 }
 
-#goal
+.Goal_Splash
 {
     left: 0px;
     top: 0px;
@@ -301,3 +265,118 @@ body {
     height: 1080px;
     z-index: 16;
 }
+
+/*/////////////////////*/
+/*////////////////////////*/
+/*/////////////////////////*/
+/*/////////////////////////*/
+/*//////////////////////////*/
+/*/////////////////////////*/
+
+
+            .hidden {
+                display: none;
+            }
+
+            .center {
+                align: center;
+            }
+
+            #names {
+                display: flex;
+            }
+
+            #names > .name-div {
+                flex: 1;
+            }
+
+            .name-div {
+                color: white;
+                font-size: 32;
+                padding-top: 1%;
+                font-weight: bold;
+            }
+
+            #name-divider {
+                width: 25%;
+            }
+
+            #name-blue {
+                text-align: right;
+            }
+
+            #name-orange {
+                text-align: left;
+                margin-left: 5%;
+            }
+
+            .set {
+                position: absolute;
+                left:0;
+                top:0;
+                z-index: -5;
+            }
+
+            #goal-splash {
+                z-index: 7;
+            }
+
+            #footer > img {
+                margin-left: auto;
+                margin-right: auto;
+                position: absolute;
+                top: 8%;
+                left: 0;
+                right: 0;
+            }
+
+            #blue-action {
+                left: 7% !important;
+                top: 1% !important;
+            }
+
+            #orange-action {
+                left: auto !important;
+                top: 1% !important;
+                right: 7% !important;
+            }
+
+            #votes {
+                align: center;
+                padding-top: 1%;
+                display: flex;
+            }
+
+            #votes > div {
+                flex: 1;
+                position: absolute;
+                height: 3px;
+                width: 311px;
+                border-style: solid;
+                border-width: 7px;
+                transition: width 0.5s;
+            }
+
+            #votes-blue {
+                border-color: blue;
+                background-color: blue;
+                left: 149px;
+            }
+
+            #votes-orange {
+                border-color: orange;
+                background-color: orange;
+                right: 147px;
+            }
+
+            .fade-in {
+                visibility: visible;
+                opacity: 1;
+                transition: opacity 1s linear;
+            }
+
+            .fade-out {
+                visibility: hidden;
+                opacity: 0;
+                transition: visibility 0s 1s, opacity 1s linear;
+            }
