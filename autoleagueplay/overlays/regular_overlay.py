@@ -4,16 +4,8 @@ from threading import Thread
 import webbrowser
 
 import eel
-from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import QApplication, QFileDialog
-from pip._internal import main as pipmain
-from rlbot.utils import rate_limiter
-from rlbot.utils import rate_limiter
-from rlbot.utils.logging_utils import get_logger
-from rlbot.utils.structures.game_interface import GameInterface
-from rlbot.utils.structures import game_data_struct
-import json
-from datetime import datetime
+from rlbot.setup_manager import SetupManager
+from rlbot.utils.structures.game_data_struct import GameTickPacket
 
 game_tick_packet = None
 should_quit = False
@@ -21,24 +13,13 @@ should_quit = False
 
 class GameTickReader:
     def __init__(self):
-        self.logger = get_logger('packet reader')
-        self.game_interface = GameInterface(self.logger)
-        self.game_interface.load_interface()
-        self.game_tick_packet = game_data_struct.GameTickPacket()
-
-        #self.rate_limit = rate_limiter.RateLimiter(GAME_TICK_PACKET_REFRESHES_PER_SECOND)
-        self.last_call_real_time = datetime.now()  # When we last called the Agent
+        self.manager = SetupManager()
+        self.manager.connect_to_game()
+        self.game_interface = self.manager.game_interface
 
     def get_packet(self):
-        now = datetime.now()
-        #self.rate_limit.acquire()
-        self.last_call_real_time = now
-
-        self.pull_data_from_game()
-        return self.game_tick_packet
-
-    def pull_data_from_game(self):
-        self.game_interface.update_live_data_packet(self.game_tick_packet)
+        packet = GameTickPacket()
+        return self.game_interface.update_live_data_packet(packet)
 
 
 def as_jsonifyable(obj):
@@ -52,6 +33,7 @@ def as_jsonifyable(obj):
 
 @eel.expose
 def get_game_tick_packet():
+    global game_tick_packet
     return as_jsonifyable(game_tick_packet)
 
 
@@ -64,21 +46,26 @@ def on_websocket_close(page, sockets):
         should_quit = True
 
 
+# @eel.expose
 def start():
-    eel.init('')
+
 
     packet_reader = GameTickReader()
 
-    eel.start('regular_overlay.html', callback=on_websocket_close, disable_cache=True)
 
     def reload_packet():
         while True:
             global game_tick_packet
             game_tick_packet = packet_reader.get_packet()
+            # time.sleep(1)
             time.sleep(1 / 120)
 
     th = Thread(target=reload_packet)
     th.start()
+
+
+    eel.init('')
+    eel.start('regular_overlay.html', port=8001, mode='false', callback=on_websocket_close, disable_cache=True)
 
     while not should_quit:
         eel.sleep(1.0)

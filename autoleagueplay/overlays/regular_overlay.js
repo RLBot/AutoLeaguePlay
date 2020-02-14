@@ -10,7 +10,7 @@ LOGO_SRC = {
     Johnnyboi_i: "johnnyboi_i.png"
 }[SETTING];
 
-vid = document.getElementById("goal");
+let vid = document.getElementById("Goal_Splash");
 vid.pause();
 vid.currentTime = 0;
 
@@ -34,9 +34,12 @@ game_stats = {
     started: false
 };
 
+loadRunner()
+
 function loadRunner() {
     setInterval(function () {
         eel.get_game_tick_packet()().then(packet => {
+            console.log("Loaded LoadRunner")
             blue_names = document.getElementById("Bot_Name_Blue");
             orange_names = document.getElementById("Bot_Name_Orange");
 
@@ -87,10 +90,10 @@ function loadRunner() {
                     if (el.name !== "") {
                         if (el.team === 0) {
                             bboost = el.boost;
-                            bboostid = document.getElementById("Boost_Bar_Blue")
+                            bboostid = document.getElementById("Boost_Fill_Blue")
                             bboost = bboost/100;
 
-                            bboostid.style.transform = toString(scaleY(bboost));
+                            bboostid.style.transform = "scaleY(" + bboost + ")";
                             // blue_cars.push(el);
                             // new_blue_shots += el.score_info.shots;
                             // new_blue_saves += el.score_info.saves;
@@ -160,6 +163,7 @@ function loadRunner() {
                 // orange_names.innerHTML = orange_name
             }
         })
+    // }, (1000))
     }, (1000 / FPS))
 }
 
@@ -310,4 +314,4 @@ function do_goal_splash() {
     //         el.classList.add("fade-out")
     //     }, 10000)
     // }
-}
+// }

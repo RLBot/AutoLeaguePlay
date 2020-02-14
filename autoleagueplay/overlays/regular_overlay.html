@@ -7,8 +7,6 @@
     <link href="regular_overlay.css" rel="stylesheet" type="text/css">
     <!-- Include eel.js - note this file doesn't exist in the 'web' directory -->
     <script type="text/javascript" src="/eel.js"></script>
-    <script type="text/javascript" src="regular_overlay.js"></script>
-
 </head>
 <body>
 <div id="background">
@@ -67,7 +65,7 @@
     </div>
 
     <div class="hide-after-match">
-        <video class="Goal_Splash" id="Goal_Splash" loop="loop" width="1920" height="1080" autoplay>
+        <video class="Goal_Splash" id="Goal_Splash" width="1920" height="1080" autoplay>
             <source src="images/goal.webm" type="video/webm">
         </video>
     </div>
@@ -76,6 +74,8 @@
 
 
 </div>
-<div onLoad="loadRunner()"></div>
+<!--<div onLoad="loadRunner()"></div>-->
+    <script type="text/javascript" src="regular_overlay.js"></script>
+
 </body>
 </html>
