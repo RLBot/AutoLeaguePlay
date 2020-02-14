@@ -190,7 +190,6 @@ body {
 {
     left: 21px;
     float: bottom;
-    transform: scaleY(0.5);
     transform-origin: bottom;
 }
 
@@ -198,7 +197,6 @@ body {
 {
     right: 21px;
     transform: scaleX(-1);
-    transform: scaleY(0.8);
     transform-origin: bottom;
 }
 

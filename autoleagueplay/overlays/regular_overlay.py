@@ -9,7 +9,7 @@ from rlbot.utils.structures.game_data_struct import GameTickPacket
 
 game_tick_packet = None
 should_quit = False
-
+FPS = 120
 
 class GameTickReader:
     def __init__(self):
@@ -40,19 +40,17 @@ def get_game_tick_packet():
 
 def on_websocket_close(page, sockets):
     global should_quit
-    eel.sleep(3.0)  # We might have just refreshed. Give the websocket a moment to reconnect.
+    eel.sleep(10.0)  # We might have just refreshed. Give the websocket a moment to reconnect.
     if not len(eel._websockets):
         # At this point we think the browser window has been closed.
         should_quit = True
+        print("DEAD")
 
 
 # @eel.expose
 def start():
-
-
     packet_reader = GameTickReader()
-
-
+    global should_quit
     def reload_packet():
         while True:
             global game_tick_packet
@@ -63,14 +61,14 @@ def start():
     th = Thread(target=reload_packet)
     th.start()
 
-
     eel.init('')
-    eel.start('regular_overlay.html', port=8001, mode='false', callback=on_websocket_close, disable_cache=True)
+    eel.start('regular_overlay.html', port=8001, mode=False, callback=on_websocket_close, disable_cache=True)
 
     while not should_quit:
         eel.sleep(1.0)
 
     th.join()
+
 
 if __name__ == "__main__":
     start()

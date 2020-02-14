@@ -1,7 +1,7 @@
 SETTING = "RLBot";
 EXPERIMENTAL_FEATURES = false;
 TWITCH_CHANNEL = "rlbotofficial";
-FPS = 60;
+FPS = 120;
 // end of settings
 
 LOGO_SRC = {
@@ -89,20 +89,21 @@ function loadRunner() {
 
                     if (el.name !== "") {
                         if (el.team === 0) {
-                            bboost = el.boost;
-                            bboostid = document.getElementById("Boost_Fill_Blue")
-                            bboost = bboost/100;
+                            boost_ammount_blue = el.boost;
+                            boost_id_blue = document.getElementById("Boost_Fill_Blue")
+                            boost_ammount_blue = boost_ammount_blue/100;
 
-                            bboostid.style.transform = "scaleY(" + bboost + ")";
-                            // blue_cars.push(el);
-                            // new_blue_shots += el.score_info.shots;
-                            // new_blue_saves += el.score_info.saves;
-                            // new_blue_demos += el.score_info.demolitions
+                            boost_id_blue.style.transform = "scaleY(" + boost_ammount_blue + ")";
+
+                            document.getElementById("Bot_Name_Blue").innerHTML = el.name;
                         } else {
-                            orange_cars.push(el);
-                            new_orange_shots += el.score_info.shots;
-                            new_orange_saves += el.score_info.saves;
-                            new_orange_demos += el.score_info.demolitions
+                            boost_ammount_orange = el.boost;
+                            boost_id_orange = document.getElementById("Boost_Fill_Orange")
+                            boost_ammount_orange = boost_ammount_orange/100;
+
+                            boost_id_orange.style.transform = "scaleY(" + boost_ammount_orange + ")";
+
+                            document.getElementById("Bot_Name_Orange").innerHTML = el.name;
                         }
                     }
                 }
@@ -131,7 +132,7 @@ function loadRunner() {
 
                 if (goal_amount > game_stats.last_total_goals) {
                     game_stats.last_total_goals = goal_amount;
-                    setTimeout(do_goal_splash, 1080)
+                    setTimeout(do_goal_splash, 1650)
                     // setTimeout(do_goal_splash, 11100)
                 }
                 //
