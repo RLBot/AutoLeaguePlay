@@ -101,7 +101,7 @@ def main():
 
         elif arguments['run']:
 
-            if arguments['--obs']:
+            if arguments['--obs']: #Todo: delete this
                 # Todo: start another thread with the obs controller. Password and options as well
                 # Options may include: show goal overlay, show devs, show cheer bar (and channel if so), show logo
                 # Record options: record each game. dont record anything (recording could be handled by ALP)

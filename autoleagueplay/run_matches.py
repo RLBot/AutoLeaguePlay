@@ -1,5 +1,9 @@
 import time
 from pathlib import Path
+import threading
+import os
+from subprocess import call
+
 
 from rlbot.setup_manager import setup_manager_context
 from rlbot.training.training import Fail
@@ -39,8 +43,10 @@ def run_match(participant_1: str, participant_2: str, match_config, replay_prefe
         # This is typically enough for Scratch.
         setup_manager.early_start_seconds = 10
 
+
+
         # For loop, but should only run exactly once
-        for exercise_result in run_playlist([match], setup_manager=setup_manager, render_policy=RenderPolicy.NO_TRAINING_RENDER):
+        for exercise_result in run_playlist([match], setup_manager=setup_manager):
 
             # Warn users if no replay was found
             if isinstance(exercise_result.grade, Fail) and exercise_result.exercise.grader.replay_monitor.replay_id == None:
@@ -121,8 +127,18 @@ def run_league_play(working_dir: WorkingDir, run_strategy: RunStrategy, replay_p
                         overlay_data.write(working_dir.overlay_interface)
 
                         match_config = make_match_config(participant_1.bot_config, participant_2.bot_config, team_size)
+
+                        overlay_controller_path = os.path.join(os.path.dirname(__file__), './overlays/regular_overlay.py')
+
+                        def overlay_controller_thread():
+                            call(["python", overlay_controller_path])
+
+                        controllerThread = threading.Thread(target=overlay_controller_thread)
+                        controllerThread.start()
+
                         result = run_match(participant_1.bot_config.name, participant_2.bot_config.name, match_config,
                                            replay_preference)
+
                         result.write(session_result_path)
                         versioned_result_path = working_dir.get_version_specific_match_result(participant_1,
                                                                                               participant_2)

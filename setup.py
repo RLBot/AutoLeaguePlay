@@ -29,6 +29,7 @@ setuptools.setup(
         'google-auth-httplib2',
         'google-auth-oauthlib',
         'pywinauto',
+        'moviepy',
     ],
     python_requires='>=3.7.0',
     version=version.__version__,

@@ -1,7 +1,7 @@
 SETTING = "RLBot";
 EXPERIMENTAL_FEATURES = false;
 TWITCH_CHANNEL = "rlbotofficial";
-FPS = 120;
+FPS = 60;
 // end of settings
 
 LOGO_SRC = {

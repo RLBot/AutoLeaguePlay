@@ -7,7 +7,7 @@ import sys
 from obswebsocket import obsws, requests
 
 # Todo: add obs_settings.json to load port, password, host, and any other option. Ideally it would be in workplace and the path is sent as argument
-
+#Todo: add check for existing scene, if not, create one with browser and gae record
 
 class Observer():
     def __init__(self, ws):
