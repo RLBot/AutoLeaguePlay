@@ -134,11 +134,13 @@ def unzip_all_bots(working_dir: WorkingDir):
                 with ZipFile(path, 'r') as zipObj:
                     # Extract all the contents of zip file in current directory
                     print(f'Extracting {path}')
-                    zipObj.extractall(path=root)
+                    folder_name = os.path.splitext(os.path.basename(path))[0]
+                    target_dir = os.path.join(root, folder_name)
+                    zipObj.extractall(path=target_dir)
 
                     # https://stackoverflow.com/questions/9813243/extract-files-from-zip-file-and-retain-mod-date
                     for zip_info in zipObj.infolist():
-                        extracted_path = os.path.join(root, zip_info.filename)
+                        extracted_path = os.path.join(target_dir, zip_info.filename)
                         time_from_zip = datetime(*zip_info.date_time[0:6])
                         seconds = int(time_from_zip.timestamp())
                         os.utime(extracted_path, (seconds, seconds))
