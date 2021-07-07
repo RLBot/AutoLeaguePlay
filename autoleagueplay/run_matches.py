@@ -21,7 +21,13 @@ from autoleagueplay.versioned_bot import VersionedBot
 logger = get_logger('autoleagueplay')
 
 
-def run_match(participant_1: str, participant_2: str, match_config, replay_preference: ReplayPreference) -> MatchResult:
+def run_match(
+    participant_1: str,
+    participant_2: str,
+    match_config,
+    replay_preference: ReplayPreference,
+    working_dir,
+) -> MatchResult:
     with setup_manager_context() as setup_manager:
 
         # Prepare the match exercise
@@ -31,8 +37,10 @@ def run_match(participant_1: str, participant_2: str, match_config, replay_prefe
             match_config=match_config,
             grader=MatchGrader(
                 mercy_rule=MercyRule(game_interface=setup_manager.game_interface),
-                replay_monitor=ReplayMonitor(replay_preference=replay_preference),
-            )
+                replay_monitor=ReplayMonitor(
+                    replay_preference=replay_preference, working_dir=working_dir
+                ),
+            ),
         )
 
         # If any bots have signed up for early start, give them 10 seconds.

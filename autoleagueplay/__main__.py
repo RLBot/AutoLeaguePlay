@@ -17,7 +17,7 @@ Usage:
     autoleagueplay --version
 
 Options:
-    --replays=R                  What to do with the replays of the match. Valid values are 'ignore', 'save', and 'calculated_gg'. [default: calculated_gg]
+    --replays=R                  What to do with the replays of the match. Valid values are 'ignore', 'save', 'anonym' and 'calculated_gg'. [default: calculated_gg]
     --teamsize=T                 How many players per team. [default: 1]
     --ignore-missing             Allow the script to run even though not all bots are in the bot directory.
     --autoshutdown=S              Shutdown the system S seconds after autoleague ends, usefull for VMs. [default: 0]

@@ -44,6 +44,7 @@ class WorkingDir:
         self.overlay_interface = working_dir / 'current_match.json'
         self.leaderboard = working_dir / 'leaderboard.png'
         self.leaderboard_clip = working_dir / 'leaderboard.mp4'
+        self.replays = working_dir / 'replays'
         self._ensure_directory_structure()
 
     def _ensure_directory_structure(self):
@@ -51,6 +52,7 @@ class WorkingDir:
         self.match_results.mkdir(exist_ok=True)
         self.versioned_results.mkdir(exist_ok=True)
         self.bots.mkdir(exist_ok=True)
+        self.replays.mkdir(exist_ok=True)
 
     def get_match_result(self, division_index: int, blue: str, orange: str) -> Path:
         match_name = f'{Ladder.DIVISION_NAMES[division_index].lower()}_{blue}_vs_{orange}.json'

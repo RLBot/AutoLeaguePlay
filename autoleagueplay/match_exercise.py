@@ -79,6 +79,7 @@ class MatchGrader(Grader):
             time.sleep(1)  # Give time for replay_monitor to register replay and for RL to load main menu
             if self.replay_monitor.replay_id or self.replay_monitor.replay_preference == ReplayPreference.IGNORE_REPLAY:
                 self.replay_monitor.stop_monitoring()
+                self.replay_monitor.anonymize_replay()
                 return Pass()
 
         # Check if game is over and replay recorded
@@ -88,10 +89,12 @@ class MatchGrader(Grader):
             self.match_result = fetch_match_score(tick.game_tick_packet)
             if self.replay_monitor.replay_id or self.replay_monitor.replay_preference == ReplayPreference.IGNORE_REPLAY:
                 self.replay_monitor.stop_monitoring()
+                self.replay_monitor.anonymize_replay()
                 return Pass()
             seconds_since_game_end = game_info.seconds_elapsed - self.last_match_time
             if seconds_since_game_end > 15:
                 self.replay_monitor.stop_monitoring()
+                self.replay_monitor.anonymize_replay()
                 return FailDueToNoReplay()
         else:
             if game_info.is_round_active and not game_info.is_match_ended:
